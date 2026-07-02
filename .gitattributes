@@ -1,0 +1,14 @@
+# git-crypt — encrypt secrets at rest in git
+# After this file is committed, .env.local (and any *.secret files) are
+# automatically encrypted on `git add` and decrypted on checkout.
+# Team members run: git-crypt unlock /path/to/keyfile
+
+# Encrypt the real env file (contains API_KEY_21ST etc.)
+.env.local filter=git-crypt diff=git-crypt
+
+# Encrypt any other secret files
+*.secret filter=git-crypt diff=git-crypt
+secrets/** filter=git-crypt diff=git-crypt
+
+# Note: .env.local.example is NOT encrypted — it has placeholders only.
+# Note: .env (tracked, contains only DATABASE_URL) is NOT encrypted — non-secret.
