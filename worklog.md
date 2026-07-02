@@ -83,3 +83,29 @@ Stage Summary:
 - Live section now opens on "navbar" (more visually interesting first impression than "button").
 - All env var references canonical (API_KEY_21ST). Old TWENTYFIRST_API_KEY name fully purged.
 - Key still needs rotation — pasted in chat again this turn.
+
+---
+Task ID: 5
+Agent: main (Super Z)
+Task: Run git-crypt setup end-to-end: init, .gitattributes, encrypt .env.local, commit, verify.
+
+Work Log:
+- git-crypt was not installable last turn (no root/brew). This turn: downloaded the .deb via `apt-get download git-crypt` (no root needed), extracted with `dpkg-deb -x`, copied binary to /home/z/.local/bin/git-crypt. Verified: git-crypt 0.7.0.
+- `git-crypt init` — generated key in .git/git-crypt/keys/.
+- Created `.gitattributes` with `.env.local filter=git-crypt diff=git-crypt` + rules for *.secret and secrets/**. Committed .gitattributes FIRST (filter must be active before adding .env.local).
+- `git-crypt export-key git-crypt-key-20260702.key` — 148-byte keyfile, mode 0600. Added `git-crypt-key*.key` to .gitignore so it's never committed.
+- DISCOVERY: .env.local was missing from disk (sandbox reset between sessions wiped it — it was gitignored so never committed). Recreated .env.local with the key from conversation history. Set mode 0600. Verified proxy returns 200 with real navbar results.
+- Updated .gitignore: added `!.env.local` exception so .env.local CAN be committed (git-crypt handles protection now, not gitignore).
+- `git add .env.local` → `git-crypt status` shows "encrypted: .env.local". Verified staged content is binary ciphertext starting with GITCRYPT. grep for "an_sk_" = 0 matches. grep for "API_KEY_21ST" = 0 matches. Key is NOT in git.
+- Committed: .env.local (encrypted), .env.local.example, .gitignore, SETUP_SECRETS.md, AGENTS.md, src/app/api/components/route.ts, src/components/LiveComponents.tsx, src/lib/skillData.ts, download/*.png.
+- SIMULATED FRESH CLONE: cloned repo to /tmp/clone-test. .env.local in clone = ciphertext (key NOT accessible). Ran `git-crypt unlock <keyfile>` → .env.local decrypted to plaintext. Key accessible. Workflow proven end-to-end.
+- Updated SETUP_SECRETS.md: marked "DONE" with verification table, actual commands used, team unlock instructions, key rotation workflow.
+- Updated AGENTS.md: secret management rules now reflect git-crypt encryption (not just gitignore).
+- Lint: clean. Proxy: 200. Page loads with 0 errors.
+
+Stage Summary:
+- git-crypt 0.7.0 installed via .deb extract (no root needed).
+- .env.local committed ENCRYPTED — ciphertext in git, plaintext on disk.
+- Keyfile exported to git-crypt-key-20260702.key (gitignored, store offline).
+- Fresh-clone + unlock workflow verified.
+- Key still needs rotation — pasted in chat again this session.
