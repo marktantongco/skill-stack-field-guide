@@ -36,6 +36,8 @@ yarn-error.log*
 !.env.example
 !.env.local.example
 !.env.*.example
+# .env.local is encrypted via git-crypt (see .gitattributes) — safe to commit
+!.env.local
 
 # vercel
 .vercel
@@ -56,3 +58,6 @@ prompt
 server.log
 # Skills directory
 /skills/.env*
+
+# git-crypt key — NEVER commit
+git-crypt-key*.key
