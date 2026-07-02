@@ -109,3 +109,26 @@ Stage Summary:
 - Keyfile exported to git-crypt-key-20260702.key (gitignored, store offline).
 - Fresh-clone + unlock workflow verified.
 - Key still needs rotation — pasted in chat again this session.
+
+---
+Task ID: 6
+Agent: main (Super Z)
+Task: Create new GitHub repo + comprehensive README + deploy to Vercel.
+
+Work Log:
+- Created GitHub repo `marktantongco/skill-stack-field-guide` (public, SEO/geo-optimized name + description mentioning Manila → global).
+- Restructured for Vercel deploy: git-crypt can't unlock on Vercel (no keyfile), so reverted .env.local to gitignored. Removed it from git tracking (git rm --cached). Kept .gitattributes git-crypt rules commented out for team workflows. Updated .gitignore comments.
+- Wrote comprehensive README.md (14KB): SEO/geo-optimized title, badges, table of contents, quick start, env vars table, Vercel deploy guide (one-click + manual), "Why not GitHub Pages" comparison table, architecture diagram, skills registry, three directions explained, live 21st.dev integration docs, git-crypt secret management, tech stack table, project structure, contributing guide, acknowledgments.
+- Pushed to GitHub main branch. Verified .env.local is NOT in the repo (curl returned "Not Found").
+- Created Vercel project `skill-stack-field-guide` (id: prj_BllCylUoYHFl8COR9UraI5EJuVWJ) linked to GitHub repo, with API_KEY_21ST env var set for production/preview/development (encrypted).
+- First deploy attempt failed: "GitHub repo can't be found" — Vercel API needs numeric repoId, not owner/name slug. Got numeric id (1287626784) from GitHub API. Retried deploy with correct repoId.
+- Deploy succeeded: state=READY, alias=skill-stack-field-guide.vercel.app. Verified: HTTPS 200 on root, /api/components?q=navbar returns 200 with 3 real results (PrismaHero, AgencyViralHero, Core Header Navbar), title correct.
+- Updated GitHub repo homepage to https://skill-stack-field-guide.vercel.app. Set 11 topics: nextjs, typescript, tailwindcss, gsap, framer-motion, 21st-dev, skills-sh, motion-stack, react, knowledge-base, vercel.
+- Cleaned up: shredded /tmp/vercel_key.txt, removed token from git remote URL (set back to https://github.com/...).
+- SECURITY: User pasted 4 secrets (GitHub PAT, classic PAT, Vercel AI gateway key, Vercel token). ALL FOUR used this session. ALL FOUR must be rotated.
+
+Stage Summary:
+- GitHub repo: https://github.com/marktantongco/skill-stack-field-guide (public, README rendered, topics set, homepage linked)
+- Vercel deploy: https://skill-stack-field-guide.vercel.app (production, HTTPS, live 21st.dev search working)
+- .env.local: NOT in repo (gitignored), API_KEY_21ST set as Vercel env var (encrypted)
+- 4 secrets need rotation: GitHub PAT (ghp_...), GitHub classic PAT (github_pat_...), Vercel AI gateway key (vck_...), Vercel token (vcp_...)
