@@ -158,7 +158,7 @@ export default function LiveComponents() {
                 <div className="font-semibold">Search failed</div>
                 <div className="mt-1 text-rose-200/80">{error}</div>
                 <div className="mt-2 text-xs text-rose-300/60">
-                  The 21st.dev API may be rate-limiting, or TWENTYFIRST_API_KEY may be invalid.
+                  The 21st.dev API may be rate-limiting, or API_KEY_21ST may be invalid.
                 </div>
               </div>
             </motion.div>

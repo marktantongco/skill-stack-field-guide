@@ -792,17 +792,77 @@ function Install() {
     <section className="mx-auto max-w-6xl px-5 py-20">
       <SectionLabel id="install" icon={Terminal} title="Install Commands" kicker="07 — copy, paste, ship" />
       <p className="mb-8 max-w-3xl text-zinc-400">
-        Every command verified against skills.sh. The broken <code className="font-mono text-rose-300">--skill 21st-dev-components</code>
+        Every skills.sh command verified. The broken <code className="font-mono text-rose-300">--skill 21st-dev-components</code>
         flag is shown for reference — use <code className="font-mono text-emerald-300">21st-registry</code> instead.
+        The 21st.dev CLI block below uses the canonical env var names from <code className="font-mono text-emerald-300">src/config.ts</code>.
       </p>
+
+      {/* 21st.dev CLI canonical setup */}
+      <Reveal>
+        <div className="mb-8 rounded-2xl border border-emerald-500/30 bg-emerald-500/[0.05] p-6">
+          <div className="mb-4 flex items-center gap-2">
+            <Terminal className="h-5 w-5 text-emerald-300" />
+            <h3 className="text-lg font-semibold text-white">21st.dev CLI — canonical setup</h3>
+          </div>
+          <p className="mb-4 text-sm text-zinc-300">
+            Per <code className="font-mono text-emerald-300">@21st-dev/registry</code> source
+            (<code className="font-mono text-xs">src/config.ts</code>), the CLI checks two env vars in order.
+            Use <code className="font-mono text-emerald-300">API_KEY_21ST</code> — the same file powers both the
+            CLI and this wiki's server-side proxy.
+          </p>
+
+          <div className="space-y-3">
+            <div className="rounded-xl border border-white/10 bg-zinc-950/60 p-4">
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <div className="text-xs font-semibold uppercase tracking-wider text-emerald-400/80">.env.local</div>
+                <CopyButton text={`# 21st.dev credentials (canonical env var names)\nAPI_KEY_21ST=your_key_here\n# Optional overrides:\n# API_URL_21ST=https://21st.dev/api/v1\n# APP_URL_21ST=https://21st.dev`} label="Copy" />
+              </div>
+              <pre className="overflow-x-auto font-mono text-xs leading-relaxed text-zinc-300"><code>{`# 21st.dev credentials (canonical env var names)
+API_KEY_21ST=your_key_here
+# Optional overrides:
+# API_URL_21ST=https://21st.dev/api/v1
+# APP_URL_21ST=https://21st.dev`}</code></pre>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="rounded-xl border border-white/10 bg-zinc-950/60 p-4">
+                <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-emerald-400/80">Login (interactive)</div>
+                <code className="block break-all font-mono text-xs text-emerald-300">npx @21st-dev/registry login</code>
+                <p className="mt-2 text-xs text-zinc-500">Stores key in <code className="font-mono">~/.an/credentials</code> (mode 0600).</p>
+              </div>
+              <div className="rounded-xl border border-white/10 bg-zinc-950/60 p-4">
+                <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-emerald-400/80">Install a component</div>
+                <code className="block break-all font-mono text-xs text-emerald-300">npx @21st-dev/registry add @author/slug</code>
+                <p className="mt-2 text-xs text-zinc-500">Pulls source into your codebase.</p>
+              </div>
+              <div className="rounded-xl border border-white/10 bg-zinc-950/60 p-4">
+                <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-emerald-400/80">Search (CLI)</div>
+                <code className="block break-all font-mono text-xs text-emerald-300">npx @21st-dev/registry search "button"</code>
+                <p className="mt-2 text-xs text-zinc-500">Same API the wiki's Live section uses.</p>
+              </div>
+              <div className="rounded-xl border border-white/10 bg-zinc-950/60 p-4">
+                <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-emerald-400/80">Publish your own</div>
+                <code className="block break-all font-mono text-xs text-emerald-300">npx @21st-dev/registry publish</code>
+                <p className="mt-2 text-xs text-zinc-500">Push a component to your registry.</p>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-white/10 bg-zinc-950/60 p-4">
+              <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-emerald-400/80">Get your API key</div>
+              <code className="block break-all font-mono text-xs text-emerald-300">https://21st.dev/studio/&lt;your-handle&gt;/api-keys</code>
+              <p className="mt-2 text-xs text-zinc-500">Docs: <code className="font-mono">https://21st.dev/studio/&lt;your-handle&gt;/docs/cli</code></p>
+            </div>
+          </div>
+        </div>
+      </Reveal>
 
       <Reveal>
         <div className="mb-8 flex items-start gap-3 rounded-2xl border border-rose-500/30 bg-rose-500/[0.08] p-4">
           <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-rose-300" />
           <div className="text-sm text-rose-100">
-            <strong>Security:</strong> You pasted a 21st.dev API key in plaintext. Treat it as compromised —
-            rotate it now in your 21st.dev dashboard. Configure the new key in <code className="font-mono">.env.local</code> as
-            <code className="font-mono"> TWENTYFIRST_API_KEY=…</code> and never commit it.
+            <strong>Security:</strong> You pasted the rotated API key in plaintext again. This new key is now also
+            compromised — rotate it once more after this session and store it in a secrets manager, not in chat.
+            The key currently configured in <code className="font-mono">.env.local</code> works, but treat it as burned.
           </div>
         </div>
       </Reveal>

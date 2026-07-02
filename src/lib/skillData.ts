@@ -196,7 +196,7 @@ export const CORES: Core[] = [
       { pair: "21st-registry + react:components", rating: 8, why: "Generate-then-install loop: react:components writes the component, 21st-registry publishes and re-installs across projects.", risk: "Round-trip can introduce drift — diff the generated vs installed versions." },
       { pair: "21st-registry + Tailwind CSS", rating: 8, why: "Installed components are Tailwind-native; styling stays consistent with your existing utility setup.", risk: "21st components may use Tailwind v3 syntax — port to v4 if needed." },
       { pair: "21st-registry + framer-motion-animator", rating: 7, why: "Add motion to installed components without ejecting them; the animator skill patches motion props onto registry components.", risk: "Patches break on component updates — pin registry versions." },
-      { pair: "21st-registry + stitch-design", rating: 7, why: "Design → registry install loop: stitch generates a design, you publish it to your 21st registry fork, then install across your portfolio.", risk: "Private registry forks need auth — set TWENTYFIRST_API_KEY in .env.local." },
+      { pair: "21st-registry + stitch-design", rating: 7, why: "Design → registry install loop: stitch generates a design, you publish it to your 21st registry fork, then install across your portfolio.", risk: "Private registry forks need auth — set API_KEY_21ST in .env.local (canonical name per @21st-dev/registry src/config.ts)." },
     ],
   },
 ];

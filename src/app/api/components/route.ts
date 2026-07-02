@@ -4,9 +4,12 @@ import { NextRequest, NextResponse } from "next/server";
  * Server-side proxy to the 21st.dev component registry.
  * The API key NEVER leaves the server — the browser only ever talks to /api/components.
  *
- * Real endpoint (reverse-engineered from @21st-dev/registry npm package, src/config.ts):
+ * Real endpoint (per @21st-dev/registry npm package, src/config.ts):
  *   GET https://21st.dev/api/v1/components/search?q=<query>&scope=public&limit=<n>
- *   Authorization: Bearer <TWENTYFIRST_API_KEY>
+ *   Authorization: Bearer <API_KEY_21ST>
+ *
+ * Env var names (canonical, checked in order): API_KEY_21ST, AN_API_KEY
+ * The same .env.local works for both this proxy AND the `npx @21st-dev/registry` CLI.
  *
  * Returns: { query, scope, results: Array<{ name, slug, description, registry,
  *          install_ref, url, preview_url, bundle_html_url, tags, author, updated_at }> }
@@ -15,7 +18,7 @@ import { NextRequest, NextResponse } from "next/server";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const API_BASE = "https://21st.dev/api/v1";
+const API_BASE = process.env.API_URL_21ST ?? "https://21st.dev/api/v1";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -23,10 +26,11 @@ export async function GET(req: NextRequest) {
   const scope = (searchParams.get("scope") ?? "public").trim();
   const limit = Math.min(parseInt(searchParams.get("limit") ?? "12", 10) || 12, 50);
 
-  const key = process.env.TWENTYFIRST_API_KEY;
+  // Canonical env var names from @21st-dev/registry src/config.ts
+  const key = process.env.API_KEY_21ST ?? process.env.AN_API_KEY;
   if (!key) {
     return NextResponse.json(
-      { error: "TWENTYFIRST_API_KEY not configured on the server." },
+      { error: "API_KEY_21ST not configured on the server. Set it in .env.local" },
       { status: 500 }
     );
   }

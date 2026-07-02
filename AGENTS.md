@@ -61,5 +61,16 @@ All pass → submit. Any fail → iterate.
 - Shared worklog: `/home/z/my-project/worklog.md` (append-only, `---` separated)
 - Final web app: `/home/z/my-project/` (Next.js root)
 
+## 21st.dev Credentials (canonical)
+Per `@21st-dev/registry` npm package (`src/config.ts`), the CLI and any tooling should read env vars in this order:
+- **`API_KEY_21ST`** — primary, use this
+- `AN_API_KEY` — legacy alias
+
+Optional overrides:
+- `API_URL_21ST` (default `https://21st.dev/api/v1`)
+- `APP_URL_21ST` (default `https://21st.dev`)
+
+The Next.js proxy at `/api/components` reads the same `API_KEY_21ST` — one `.env.local` powers both the CLI and the wiki. Key management: `npx @21st-dev/registry login` writes to `~/.an/credentials` (mode 0600); env var takes precedence. **Never paste keys in chat. Rotate immediately if exposed.**
+
 ## Tone
 Direct. Conversational. Confident + provisional. Short sentences. Plain language. No filler.
