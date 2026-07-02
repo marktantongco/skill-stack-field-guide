@@ -35,3 +35,27 @@ Stage Summary:
 - Key correction surfaced: `21st-dev/registry` skill is `21st-registry`, NOT `21st-dev-components` — flagged in Foundations, Registry, and Install sections.
 - Security warning surfaced: user's pasted API key flagged for rotation in Install section.
 - AGENTS.md written adopting SilentDepth v4 protocol for the project.
+
+---
+Task ID: 3
+Agent: main (Super Z)
+Task: Integrate live 21st.dev API + refocus on Direction B + wire GSAP into hero.
+
+Work Log:
+- Reverse-engineered the real 21st.dev API by unpacking the @21st-dev/registry npm package. The endpoint is `https://21st.dev/api/v1/components/search?q=<q>&scope=public&limit=<n>` with `Authorization: Bearer <key>` — NOT `/api/components` as the user prompt claimed. The user's path returned 404.
+- Verified the real endpoint returns: name, slug, description, install_ref, url, preview_url (CDN PNG), author, tags, updated_at.
+- Created `.env.local` with TWENTYFIRST_API_KEY (gitignored — already in .gitignore).
+- Built `/src/app/api/components/route.ts` — server-side proxy. Key never leaves the server. Browser talks only to `/api/components?q=...`. Caches 30s.
+- Installed `gsap@3.15.0` + `@gsap/react@2.1.2` via bun.
+- Built `/src/components/LiveComponents.tsx` — search form, suggestion chips (button/hero/card/navbar/modal/input/tabs/accordion/tooltip/sidebar), live results grid with preview PNGs, detail drawer with install command (`npx @21st-dev/registry add <install_ref>`), loading skeletons, error state, empty state. Auto-searches "button" on mount.
+- Refactored Hero: title now uses GSAP `useGSAP` for split-and-stagger word reveal (expo.out, stagger 0.06). Copy rewritten to foreground Direction B + live 21st.dev. Stat strip updated (Live 21st.dev search / B default direction).
+- Changed Combinations default filter from "all" to "B" (Zero-Bundle Fluidity) per user instruction.
+- Added "Live 21st" link to sticky nav (first position).
+- Lint: clean (0 errors, 0 warnings after removing unused eslint-disable directives).
+- Agent-browser verification: page loads (200), 0 console errors, 1 h1 + 8 h2 sections, live search returns 12 hero results, drawer opens with install command, Direction B filter default shows 10 cards, All 30 shows 30. Screenshots captured (mobile + desktop).
+
+Stage Summary:
+- Live 21st.dev integration working end-to-end via server-side proxy.
+- Hero GSAP animation verified.
+- Direction B is now the default scope.
+- API key kept server-side only; still flagged for rotation.

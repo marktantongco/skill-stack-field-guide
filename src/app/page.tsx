@@ -2,6 +2,8 @@
 
 import { useState, useMemo, useRef, useEffect } from "react";
 import { motion, AnimatePresence, useScroll, useSpring, useTransform } from "framer-motion";
+import { useGSAP } from "@gsap/react";
+import gsap from "gsap";
 import {
   Zap, Layers, GitBranch, Boxes, Sparkles, AlertTriangle, CheckCircle2,
   XCircle, Copy, Check, ChevronDown, Search, Cpu, Smartphone, Globe, Terminal,
@@ -11,6 +13,9 @@ import {
   COMBOS, MATRIX, SKILLS, CORES, INSTALL_COMMANDS, DIRECTIONS,
   type Direction, type Combo,
 } from "@/lib/skillData";
+import LiveComponents from "@/components/LiveComponents";
+
+gsap.registerPlugin(useGSAP);
 
 /* ------------------------------------------------------------------ */
 /* Small shared primitives                                             */
@@ -79,10 +84,39 @@ function CopyButton({ text, label }: { text: string; label?: string }) {
 
 function Hero() {
   const ref = useRef<HTMLDivElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
   const y1 = useTransform(scrollYProgress, [0, 1], [0, -120]);
   const y2 = useTransform(scrollYProgress, [0, 1], [0, 80]);
   const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
+
+  // GSAP: split-and-stagger the title characters. Imperative — never touches React state.
+  useGSAP(() => {
+    const title = titleRef.current;
+    if (!title) return;
+    const text = title.textContent ?? "";
+    const parts = text.split(" ").map((w, i) => ({ w, i }));
+    title.innerHTML = "";
+    parts.forEach((p) => {
+      const span = document.createElement("span");
+      span.style.display = "inline-block";
+      span.style.overflow = "hidden";
+      span.style.verticalAlign = "top";
+      const inner = document.createElement("span");
+      inner.style.display = "inline-block";
+      inner.textContent = p.w + "\u00A0";
+      span.appendChild(inner);
+      title.appendChild(span);
+    });
+    gsap.from(title.children, {
+      yPercent: 110,
+      opacity: 0,
+      duration: 0.9,
+      ease: "expo.out",
+      stagger: 0.06,
+      delay: 0.15,
+    });
+  }, { scope: ref });
 
   return (
     <section ref={ref} className="relative min-h-[92vh] overflow-hidden">
@@ -97,49 +131,50 @@ function Hero() {
       <motion.div style={{ opacity }} className="relative mx-auto flex min-h-[92vh] max-w-6xl flex-col justify-center px-5 py-20">
         <motion.div
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}
-          className="mb-5 inline-flex w-fit items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 font-mono text-xs text-emerald-300"
+          className="mb-5 inline-flex w-fit items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 font-mono text-xs text-amber-300"
         >
-          <Sparkles className="h-3.5 w-3.5" /> skills.sh × motion-stack knowledge-base
+          <Sparkles className="h-3.5 w-3.5" /> Direction B · Zero-Bundle Fluidity · live 21st.dev
         </motion.div>
 
-        <motion.h1
-          initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.1 }}
+        <h1
+          ref={titleRef}
           className="max-w-4xl text-4xl font-bold leading-[1.05] tracking-tight text-white sm:text-6xl lg:text-7xl"
         >
-          The Skill-Stack <span className="bg-gradient-to-r from-emerald-300 via-teal-300 to-amber-300 bg-clip-text text-transparent">Field Guide</span>
-        </motion.h1>
+          The Zero-Bundle Field Guide
+        </h1>
 
         <motion.p
-          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.25 }}
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.45 }}
           className="mt-6 max-w-2xl text-base leading-relaxed text-zinc-300 sm:text-lg"
         >
-          30 motion-stack combinations across three wildly different directions. A deduped 20-row synergy matrix.
-          A verified skills registry with live install counts. Three foundational cores, each with five highest-rated
-          pairings. Built mobile-first, fluid by default.
+          Mobile-first, fluid by default. This edition focuses on <strong className="text-white">Direction B</strong> —
+          CSS View Transitions, WAAPI, Tailwind, Popmotion — and ships a <strong className="text-white">live 21st.dev
+          registry search</strong> powered by the official API. Thirty combinations and a twenty-row synergy matrix
+          remain on tap when you need to branch out.
         </motion.p>
 
         <motion.div
-          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.4 }}
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.6 }}
           className="mt-9 flex flex-wrap gap-3"
         >
-          <a href="#combinations" className="inline-flex items-center gap-2 rounded-xl bg-emerald-400 px-5 py-3 text-sm font-semibold text-emerald-950 transition hover:bg-emerald-300">
-            Explore 30 stacks <ArrowRight className="h-4 w-4" />
+          <a href="#live" className="inline-flex items-center gap-2 rounded-xl bg-emerald-400 px-5 py-3 text-sm font-semibold text-emerald-950 transition hover:bg-emerald-300">
+            Search live components <ArrowRight className="h-4 w-4" />
           </a>
-          <a href="#registry" className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:border-white/30">
-            <Boxes className="h-4 w-4" /> Skills registry
+          <a href="#combinations" className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:border-white/30">
+            <GitBranch className="h-4 w-4" /> 30 stacks
           </a>
         </motion.div>
 
         {/* stat strip */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.55 }}
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.75 }}
           className="mt-14 grid grid-cols-2 gap-3 sm:grid-cols-4"
         >
           {[
             { v: "30", l: "stack combinations" },
             { v: "20", l: "synergy-matrix rows" },
-            { v: "23", l: "verified skills" },
-            { v: "3", l: "foundational cores" },
+            { v: "Live", l: "21st.dev search" },
+            { v: "B", l: "default direction" },
           ].map((s) => (
             <div key={s.l} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 backdrop-blur">
               <div className="text-2xl font-bold text-white sm:text-3xl">{s.v}</div>
@@ -167,6 +202,7 @@ function Hero() {
 function StickyNav() {
   const [open, setOpen] = useState(false);
   const links = [
+    { href: "#live", label: "Live 21st" },
     { href: "#foundations", label: "Foundations" },
     { href: "#combinations", label: "30 Combos" },
     { href: "#matrix", label: "Synergy Matrix" },
@@ -310,7 +346,7 @@ function ComboCard({ c, index }: { c: Combo; index: number }) {
 }
 
 function Combinations() {
-  const [filter, setFilter] = useState<"all" | Direction>("all");
+  const [filter, setFilter] = useState<"all" | Direction>("B");
   const filtered = useMemo(() => filter === "all" ? COMBOS : COMBOS.filter((c) => c.dir === filter), [filter]);
   const tabs: { id: "all" | Direction; label: string }[] = [
     { id: "all", label: "All 30" },
@@ -841,6 +877,7 @@ export default function Home() {
       <StickyNav />
       <main className="flex-1">
         <Hero />
+        <LiveComponents />
         <Foundations />
         <Combinations />
         <SynergyMatrix />
