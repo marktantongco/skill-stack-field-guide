@@ -74,10 +74,11 @@ The Next.js proxy at `/api/components` reads the same `API_KEY_21ST` — one `.e
 
 ### Secret management rules (non-negotiable)
 - **Reference keys by NAME (`API_KEY_21ST`), never by value.** In code, docs, chat, issues, PRs.
-- `.env.local` is gitignored (`.env*` pattern) — never committed in plaintext.
-- `.env.local.example` is committed — documents env var names with placeholders only.
-- For team secret sharing, use git-crypt (see `SETUP_SECRETS.md` for full workflow).
+- `.env.local` is **git-crypt encrypted** (see `.gitattributes`) — safe to commit. Ciphertext in git, plaintext on disk after `git-crypt unlock`.
+- `.env.local.example` is committed plaintext — documents env var names with placeholders only.
+- git-crypt keyfile (`git-crypt-key-*.key`) is gitignored — store offline, treat like a root credential.
 - **Never paste keys in chat. Rotate immediately if exposed.** The key has been pasted in chat multiple times this session — treat it as burned and rotate after every session where it appears.
+- Full workflow + team unlock instructions: see `SETUP_SECRETS.md`.
 
 ## Tone
 Direct. Conversational. Confident + provisional. Short sentences. Plain language. No filler.
