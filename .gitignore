@@ -36,8 +36,8 @@ yarn-error.log*
 !.env.example
 !.env.local.example
 !.env.*.example
-# .env.local is encrypted via git-crypt (see .gitattributes) — safe to commit
-!.env.local
+# .env.local is gitignored — for local dev + Vercel env vars (set in dashboard).
+# git-crypt is kept for team workflows but .env.local is NOT committed (Vercel can't unlock).
 
 # vercel
 .vercel
