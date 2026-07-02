@@ -213,6 +213,7 @@ export const INSTALL_COMMANDS: { label: string; cmd: string; verified: boolean }
   { label: "gsap-core", cmd: "npx skills add greensock/gsap-skills --skill gsap-core", verified: true },
   { label: "gsap-scrolltrigger", cmd: "npx skills add greensock/gsap-skills --skill gsap-scrolltrigger", verified: true },
   { label: "framer-motion-animator", cmd: "npx skills add patricio0312rev/skills --skill framer-motion-animator", verified: true },
-  { label: "motion-design (Lottie)", cmd: "npx skills add LottieFiles/motion-design-skill --skill motion-design", verified: true },
+  { label: "lottie-motion (BROKEN — use motion-design)", cmd: "npx skills add https://github.com/LottieFiles/motion-design-skill --skill lottie-motion", verified: false },
+  { label: "motion-design (Lottie — CORRECT)", cmd: "npx skills add https://github.com/LottieFiles/motion-design-skill --skill motion-design", verified: true },
   { label: "supanova-premium-aesthetic", cmd: "npx skills add uxjoseph/supanova-design-skill --skill supanova-premium-aesthetic", verified: true },
 ];

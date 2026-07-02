@@ -59,3 +59,27 @@ Stage Summary:
 - Hero GSAP animation verified.
 - Direction B is now the default scope.
 - API key kept server-side only; still flagged for rotation.
+
+---
+Task ID: 4
+Agent: main (Super Z)
+Task: git-crypt setup + .env.local.example + fix lottie-motion skill name + swap Live default to navbar.
+
+Work Log:
+- Verified .env.local is gitignored (`.env*` pattern) and NOT tracked in git. Key never committed.
+- Verified tracked `.env` only contains DATABASE_URL (no secrets).
+- git-crypt not installable in sandbox (no root/brew). Wrote SETUP_SECRETS.md with full git-crypt workflow for user to run locally: install, init, .gitattributes, commit encrypted .env.local, team unlock, rotation.
+- Created `.env.local.example` (committed, placeholder `your_key_here`, no real key). Documents canonical env var names.
+- Fixed .gitignore: added `!.env.example`, `!.env.local.example`, `!.env.*.example` exceptions so example files can be committed while `.env*` still ignores real env files.
+- Fixed lottie-motion skill name: the LottieFiles repo's skill is `motion-design` (3.7K installs on skills.sh), NOT `lottie-motion`. Added broken entry `lottie-motion (BROKEN — use motion-design)` to INSTALL_COMMANDS alongside the correct `motion-design (Lottie — CORRECT)` entry. Both use the full GitHub URL form per user's request.
+- Swapped LiveComponents default search from "button" to "navbar" (useState + initial run). 12 navbar results return on load.
+- Updated AGENTS.md with "Secret management rules (non-negotiable)" subsection: reference keys by name, .env.local gitignored, .env.local.example committed, git-crypt for team sharing, rotate on exposure.
+- Lint: clean.
+- Agent-browser verification: navbar default = 12 results (first = PrismaHero), API_KEY_21ST present in page, TWENTYFIRST_API_KEY fully removed, lottie-motion broken flag visible, CLI card with login/add/search/publish commands renders, placeholder `your_key_here` visible. Screenshots captured.
+
+Stage Summary:
+- Secret hygiene locked down: .env.local gitignored, .env.local.example committed with placeholder, SETUP_SECRETS.md documents git-crypt.
+- lottie-motion broken flag surfaced in wiki.
+- Live section now opens on "navbar" (more visually interesting first impression than "button").
+- All env var references canonical (API_KEY_21ST). Old TWENTYFIRST_API_KEY name fully purged.
+- Key still needs rotation — pasted in chat again this turn.

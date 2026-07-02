@@ -19,8 +19,8 @@ interface ComponentResult {
 const SUGGESTIONS = ["button", "hero", "card", "navbar", "modal", "input", "tabs", "accordion", "tooltip", "sidebar"];
 
 export default function LiveComponents() {
-  const [q, setQ] = useState("button");
-  const [submitted, setSubmitted] = useState("button");
+  const [q, setQ] = useState("navbar");
+  const [submitted, setSubmitted] = useState("navbar");
   const [results, setResults] = useState<ComponentResult[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,7 +46,7 @@ export default function LiveComponents() {
   }, []);
 
   // kick off the initial search on mount
-  useState(() => { run("button"); });
+  useState(() => { run("navbar"); });
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();

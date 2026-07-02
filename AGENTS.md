@@ -70,7 +70,14 @@ Optional overrides:
 - `API_URL_21ST` (default `https://21st.dev/api/v1`)
 - `APP_URL_21ST` (default `https://21st.dev`)
 
-The Next.js proxy at `/api/components` reads the same `API_KEY_21ST` — one `.env.local` powers both the CLI and the wiki. Key management: `npx @21st-dev/registry login` writes to `~/.an/credentials` (mode 0600); env var takes precedence. **Never paste keys in chat. Rotate immediately if exposed.**
+The Next.js proxy at `/api/components` reads the same `API_KEY_21ST` — one `.env.local` powers both the CLI and the wiki. Key management: `npx @21st-dev/registry login` writes to `~/.an/credentials` (mode 0600); env var takes precedence.
+
+### Secret management rules (non-negotiable)
+- **Reference keys by NAME (`API_KEY_21ST`), never by value.** In code, docs, chat, issues, PRs.
+- `.env.local` is gitignored (`.env*` pattern) — never committed in plaintext.
+- `.env.local.example` is committed — documents env var names with placeholders only.
+- For team secret sharing, use git-crypt (see `SETUP_SECRETS.md` for full workflow).
+- **Never paste keys in chat. Rotate immediately if exposed.** The key has been pasted in chat multiple times this session — treat it as burned and rotate after every session where it appears.
 
 ## Tone
 Direct. Conversational. Confident + provisional. Short sentences. Plain language. No filler.
