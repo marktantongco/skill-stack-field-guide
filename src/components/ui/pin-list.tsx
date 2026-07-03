@@ -1,193 +1,447 @@
 'use client';
 
 import * as React from 'react';
-import { Pin } from 'lucide-react';
+import { Pin, PinOff, Search, GripVertical } from 'lucide-react';
 import {
   motion,
   LayoutGroup,
   AnimatePresence,
+  Reorder,
   type HTMLMotionProps,
   type Transition,
 } from 'motion/react';
 import { cn } from '@/lib/utils';
 
-type PinListItem = {
-  id: number;
-  name: string;
-  info: string;
-  icon: React.ElementType;
-  pinned: boolean;
-};
+/* ------------------------------------------------------------------ */
+/* Types                                                               */
+/* ------------------------------------------------------------------ */
 
-type PinListProps = {
+export interface PinListItem {
+  id: string | number;
+  name: string;
+  info?: string;
+  icon?: React.ElementType;
+  pinned?: boolean;
+  metadata?: React.ReactNode;
+}
+
+export interface PinListProps
+  extends Omit<HTMLMotionProps<'div'>, 'children'> {
   items: PinListItem[];
   labels?: {
     pinned?: string;
     unpinned?: string;
+    searchPlaceholder?: string;
+    empty?: string;
+    noResults?: string;
   };
+  /** Enable drag-to-reorder within each section. Default: false (touch-friendly). */
+  enableDragReorder?: boolean;
+  /** Enable search/filter input. Default: false. */
+  enableSearch?: boolean;
+  /** Allow unpin via secondary action (long-press / right-click). Default: false. */
+  enableQuickUnpin?: boolean;
   transition?: Transition;
-  labelMotionProps?: HTMLMotionProps<'p'>;
   className?: string;
+  itemClassName?: string;
   labelClassName?: string;
   pinnedSectionClassName?: string;
   unpinnedSectionClassName?: string;
+  searchClassName?: string;
+  pinIcon?: React.ElementType;
+  unpinIcon?: React.ElementType;
   zIndexResetDelay?: number;
-} & HTMLMotionProps<'div'>;
+  onItemsChange?: (items: PinListItem[]) => void;
+  onTogglePin?: (id: string | number, pinned: boolean) => void;
+}
+
+/* ------------------------------------------------------------------ */
+/* Default motion config                                              */
+/* ------------------------------------------------------------------ */
+
+const DEFAULT_TRANSITION: Transition = {
+  stiffness: 320,
+  damping: 22,
+  mass: 0.8,
+  type: 'spring',
+};
+
+const LABEL_MOTION: HTMLMotionProps<'p'> = {
+  initial: { opacity: 0, y: -4 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -4 },
+  transition: { duration: 0.22, ease: 'easeInOut' },
+};
+
+/* ------------------------------------------------------------------ */
+/* Single list item — shared between pinned + unpinned sections        */
+/* ------------------------------------------------------------------ */
+
+interface RowProps {
+  item: PinListItem;
+  isPinned: boolean;
+  onToggle: () => void;
+  onQuickUnpin?: () => void;
+  transition: Transition;
+  className?: string;
+  pinIcon: React.ElementType;
+  unpinIcon: React.ElementType;
+  enableDragReorder: boolean;
+}
+
+function PinListRow({
+  item,
+  isPinned,
+  onToggle,
+  onQuickUnpin,
+  transition,
+  className,
+  pinIcon: PinIcon,
+  unpinIcon: UnpinIcon,
+  enableDragReorder,
+}: RowProps) {
+  void UnpinIcon; // reserved for future unpin-affordance variant
+  const Icon = item.icon;
+  const row = (
+    <motion.div
+      layoutId={`item-${item.id}`}
+      onClick={onToggle}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onToggle();
+        }
+      }}
+      onContextMenu={(e) => {
+        if (isPinned && onQuickUnpin) {
+          e.preventDefault();
+          onQuickUnpin();
+        }
+      }}
+      transition={transition}
+      role="button"
+      tabIndex={0}
+      aria-label={`${isPinned ? 'Unpin' : 'Pin'} ${item.name}`}
+      aria-pressed={isPinned}
+      className={cn(
+        // mobile-first: 44px min touch target, generous padding, rounded
+        'group flex min-h-[56px] cursor-pointer items-center justify-between gap-3 rounded-2xl border border-transparent bg-neutral-100 p-2.5 outline-none transition-colors',
+        'hover:border-neutral-200 hover:bg-neutral-200/60',
+        'dark:bg-neutral-800/60 dark:hover:border-neutral-700 dark:hover:bg-neutral-800',
+        'focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+        className,
+      )}
+    >
+      <div className="flex min-w-0 flex-1 items-center gap-2.5">
+        {enableDragReorder && (
+          <GripVertical className="size-4 shrink-0 cursor-grab text-neutral-400 opacity-0 group-hover:opacity-100 active:cursor-grabbing" aria-hidden />
+        )}
+        {Icon && (
+          <div className="grid size-9 shrink-0 place-items-center rounded-lg bg-background text-neutral-500 dark:text-neutral-400">
+            <Icon className="size-4.5" />
+          </div>
+        )}
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-sm font-semibold">{item.name}</div>
+          {item.info && (
+            <div className="truncate text-xs font-medium text-neutral-500 dark:text-neutral-400">
+              {item.info}
+            </div>
+          )}
+        </div>
+        {item.metadata && (
+          <div className="shrink-0 text-xs text-neutral-400">{item.metadata}</div>
+        )}
+      </div>
+      <div
+        className={cn(
+          'grid size-9 shrink-0 place-items-center rounded-full transition-all duration-200',
+          isPinned
+            ? 'bg-emerald-500 text-white shadow-sm shadow-emerald-500/30'
+            : 'bg-neutral-300 text-neutral-500 opacity-0 group-hover:opacity-100 dark:bg-neutral-700 dark:text-neutral-300',
+        )}
+      >
+        {isPinned ? (
+          <PinIcon className="size-4 fill-current" />
+        ) : (
+          <PinIcon className="size-4" />
+        )}
+      </div>
+    </motion.div>
+  );
+
+  if (enableDragReorder) {
+    return (
+      <Reorder.Item
+        value={item}
+        as="div"
+        className="list-none"
+        whileDrag={{ scale: 1.03, zIndex: 50, boxShadow: '0 10px 30px rgba(0,0,0,0.15)' }}
+      >
+        {row}
+      </Reorder.Item>
+    );
+  }
+  return row;
+}
+
+/* ------------------------------------------------------------------ */
+/* Main component                                                     */
+/* ------------------------------------------------------------------ */
 
 function PinList({
   items,
-  labels = { pinned: 'Pinned Items', unpinned: 'All Items' },
-  transition = { stiffness: 320, damping: 20, mass: 0.8, type: 'spring' },
-  labelMotionProps = {
-    initial: { opacity: 0 },
-    animate: { opacity: 1 },
-    exit: { opacity: 0 },
-    transition: { duration: 0.22, ease: 'easeInOut' },
+  labels = {
+    pinned: 'Pinned',
+    unpinned: 'All items',
+    searchPlaceholder: 'Search…',
+    empty: 'Nothing here yet.',
+    noResults: 'No matches.',
   },
+  enableDragReorder = false,
+  enableSearch = false,
+  enableQuickUnpin = false,
+  transition = DEFAULT_TRANSITION,
   className,
+  itemClassName,
   labelClassName,
   pinnedSectionClassName,
   unpinnedSectionClassName,
+  searchClassName,
+  pinIcon = Pin,
+  unpinIcon = PinOff,
   zIndexResetDelay = 500,
+  onItemsChange,
+  onTogglePin,
   ...props
 }: PinListProps) {
   const [listItems, setListItems] = React.useState(items);
-  const [togglingGroup, setTogglingGroup] = React.useState<
-    'pinned' | 'unpinned' | null
-  >(null);
+  const [togglingGroup, setTogglingGroup] = React.useState<'pinned' | 'unpinned' | null>(null);
+  const [query, setQuery] = React.useState('');
 
-  const pinned = listItems.filter((u) => u.pinned);
-  const unpinned = listItems.filter((u) => !u.pinned);
+  // sync external → internal if parent replaces items
+  React.useEffect(() => {
+    setListItems(items);
+  }, [items]);
 
-  const toggleStatus = (id: number) => {
-    const item = listItems.find((u) => u.id === id);
-    if (!item) return;
+  const update = React.useCallback(
+    (next: PinListItem[]) => {
+      setListItems(next);
+      onItemsChange?.(next);
+    },
+    [onItemsChange],
+  );
 
-    setTogglingGroup(item.pinned ? 'pinned' : 'unpinned');
-    setListItems((prev) => {
-      const idx = prev.findIndex((u) => u.id === id);
-      if (idx === -1) return prev;
-      const updated = [...prev];
-      const [item] = updated.splice(idx, 1);
-      if (!item) return prev;
-      const toggled = { ...item, pinned: !item.pinned };
-      if (toggled.pinned) updated.push(toggled);
-      else updated.unshift(toggled);
-      return updated;
-    });
-    // Reset group z-index after the animation duration (keep in sync with animation timing)
-    setTimeout(() => setTogglingGroup(null), zIndexResetDelay);
-  };
+  const togglePin = React.useCallback(
+    (id: string | number) => {
+      const item = listItems.find((u) => u.id === id);
+      if (!item) return;
+      setTogglingGroup(item.pinned ? 'pinned' : 'unpinned');
+      update(
+        listItems.flatMap((u) => {
+          if (u.id !== id) return [u];
+          const toggled = { ...u, pinned: !u.pinned };
+          onTogglePin?.(id, toggled.pinned ?? false);
+          return [toggled];
+        }).sort((a, b) => Number(b.pinned) - Number(a.pinned)),
+      );
+      window.setTimeout(() => setTogglingGroup(null), zIndexResetDelay);
+    },
+    [listItems, onTogglePin, update, zIndexResetDelay],
+  );
+
+  // search filter (case-insensitive on name + info)
+  const q = query.trim().toLowerCase();
+  const filtered = q
+    ? listItems.filter(
+        (u) =>
+          u.name.toLowerCase().includes(q) ||
+          (u.info?.toLowerCase().includes(q) ?? false),
+      )
+    : listItems;
+
+  const pinned = filtered.filter((u) => u.pinned);
+  const unpinned = filtered.filter((u) => !u.pinned);
+  const hasAny = listItems.length > 0;
+  const hasResults = filtered.length > 0;
 
   return (
-    <motion.div className={cn('space-y-10', className)} {...props}>
+    <motion.div className={cn('w-full space-y-6', className)} {...props}>
+      {/* Search */}
+      {enableSearch && hasAny && (
+        <div className={cn('relative', searchClassName)}>
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-neutral-400" aria-hidden />
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={labels.searchPlaceholder}
+            aria-label={labels.searchPlaceholder}
+            className={cn(
+              'h-11 w-full rounded-xl border border-neutral-200 bg-neutral-100 pl-10 pr-4 text-sm outline-none transition',
+              'placeholder:text-neutral-400',
+              'focus:border-emerald-500 focus:bg-background focus:ring-2 focus:ring-emerald-500/20',
+              'dark:border-neutral-700 dark:bg-neutral-800 dark:focus:bg-neutral-900',
+            )}
+          />
+        </div>
+      )}
+
+      {/* Empty state — no items at all */}
+      {!hasAny && (
+        <div className="grid place-items-center rounded-2xl border border-dashed border-neutral-200 py-12 text-sm text-neutral-400 dark:border-neutral-800">
+          {labels.empty}
+        </div>
+      )}
+
+      {/* No search results */}
+      {hasAny && !hasResults && (
+        <div className="grid place-items-center rounded-2xl border border-dashed border-neutral-200 py-12 text-sm text-neutral-400 dark:border-neutral-800">
+          {labels.noResults}
+        </div>
+      )}
+
       <LayoutGroup>
-        <div>
-          <AnimatePresence>
-            {pinned.length > 0 && (
+        {/* Pinned section */}
+        {hasResults && pinned.length > 0 && (
+          <section aria-label={labels.pinned} className={pinnedSectionClassName}>
+            <AnimatePresence>
               <motion.p
                 layout
                 key="pinned-label"
                 className={cn(
-                  'font-medium px-3 text-neutral-500 dark:text-neutral-300 text-sm mb-2',
+                  'mb-2 px-1 text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400',
                   labelClassName,
                 )}
-                {...labelMotionProps}
+                {...LABEL_MOTION}
               >
-                {labels.pinned}
+                {labels.pinned} · {pinned.length}
               </motion.p>
-            )}
-          </AnimatePresence>
-          {pinned.length > 0 && (
+            </AnimatePresence>
             <div
               className={cn(
-                'space-y-3 relative',
+                'relative space-y-2',
                 togglingGroup === 'pinned' ? 'z-5' : 'z-10',
-                pinnedSectionClassName,
               )}
             >
-              {pinned.map((item) => (
-                <motion.div
-                  key={item.id}
-                  layoutId={`item-${item.id}`}
-                  onClick={() => toggleStatus(item.id)}
-                  transition={transition}
-                  className="flex items-center justify-between gap-5 rounded-2xl bg-neutral-200 dark:bg-neutral-800 p-2"
+              {enableDragReorder ? (
+                <Reorder.Group
+                  axis="y"
+                  values={pinned}
+                  onReorder={(reordered) => {
+                    const rest = listItems.filter((u) => !u.pinned);
+                    update([...reordered, ...rest]);
+                  }}
+                  as="div"
+                  className="space-y-2"
                 >
-                  <div className="flex items-center gap-2">
-                    <div className="rounded-lg bg-background p-2">
-                      <item.icon className="size-5 text-neutral-500 dark:text-neutral-400" />
-                    </div>
-                    <div>
-                      <div className="text-sm font-semibold">{item.name}</div>
-                      <div className="text-xs text-neutral-500 dark:text-neutral-400 font-medium">
-                        {item.info}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-center size-8 rounded-full bg-neutral-400 dark:bg-neutral-600">
-                    <Pin className="size-4 text-white fill-white" />
-                  </div>
-                </motion.div>
-              ))}
+                  {pinned.map((item) => (
+                    <PinListRow
+                      key={item.id}
+                      item={item}
+                      isPinned
+                      onToggle={() => togglePin(item.id)}
+                      onQuickUnpin={
+                        enableQuickUnpin ? () => togglePin(item.id) : undefined
+                      }
+                      transition={transition}
+                      className={itemClassName}
+                      pinIcon={pinIcon}
+                      unpinIcon={unpinIcon}
+                      enableDragReorder
+                    />
+                  ))}
+                </Reorder.Group>
+              ) : (
+                pinned.map((item) => (
+                  <PinListRow
+                    key={item.id}
+                    item={item}
+                    isPinned
+                    onToggle={() => togglePin(item.id)}
+                    onQuickUnpin={
+                      enableQuickUnpin ? () => togglePin(item.id) : undefined
+                    }
+                    transition={transition}
+                    className={itemClassName}
+                    pinIcon={pinIcon}
+                    unpinIcon={unpinIcon}
+                    enableDragReorder={false}
+                  />
+                ))
+              )}
             </div>
-          )}
-        </div>
+          </section>
+        )}
 
-        <div>
-          <AnimatePresence>
-            {unpinned.length > 0 && (
+        {/* Unpinned section */}
+        {hasResults && unpinned.length > 0 && (
+          <section aria-label={labels.unpinned} className={unpinnedSectionClassName}>
+            <AnimatePresence>
               <motion.p
                 layout
-                key="all-label"
+                key="unpinned-label"
                 className={cn(
-                  'font-medium px-3 text-neutral-500 dark:text-neutral-300 text-sm mb-2',
+                  'mb-2 px-1 text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400',
                   labelClassName,
                 )}
-                {...labelMotionProps}
+                {...LABEL_MOTION}
               >
-                {labels.unpinned}
+                {labels.unpinned} · {unpinned.length}
               </motion.p>
-            )}
-          </AnimatePresence>
-          {unpinned.length > 0 && (
+            </AnimatePresence>
             <div
               className={cn(
-                'space-y-3 relative',
+                'relative space-y-2',
                 togglingGroup === 'unpinned' ? 'z-5' : 'z-10',
-                unpinnedSectionClassName,
               )}
             >
-              {unpinned.map((item) => (
-                <motion.div
-                  key={item.id}
-                  layoutId={`item-${item.id}`}
-                  onClick={() => toggleStatus(item.id)}
-                  transition={transition}
-                  className="flex items-center justify-between gap-5 rounded-2xl bg-neutral-200 dark:bg-neutral-800 p-2 group"
+              {enableDragReorder ? (
+                <Reorder.Group
+                  axis="y"
+                  values={unpinned}
+                  onReorder={(reordered) => {
+                    const pinnedItems = listItems.filter((u) => u.pinned);
+                    update([...pinnedItems, ...reordered]);
+                  }}
+                  as="div"
+                  className="space-y-2"
                 >
-                  <div className="flex items-center gap-2">
-                    <div className="rounded-lg bg-background p-2">
-                      <item.icon className="size-5 text-neutral-500 dark:text-neutral-400" />
-                    </div>
-                    <div>
-                      <div className="text-sm font-semibold">{item.name}</div>
-                      <div className="text-xs text-neutral-500 dark:text-neutral-400 font-medium">
-                        {item.info}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-center size-8 rounded-full bg-neutral-400 dark:bg-neutral-600 opacity-0 group-hover:opacity-100 transition-opacity duration-250">
-                    <Pin className="size-4 text-white" />
-                  </div>
-                </motion.div>
-              ))}
+                  {unpinned.map((item) => (
+                    <PinListRow
+                      key={item.id}
+                      item={item}
+                      isPinned={false}
+                      onToggle={() => togglePin(item.id)}
+                      transition={transition}
+                      className={itemClassName}
+                      pinIcon={pinIcon}
+                      unpinIcon={unpinIcon}
+                      enableDragReorder
+                    />
+                  ))}
+                </Reorder.Group>
+              ) : (
+                unpinned.map((item) => (
+                  <PinListRow
+                    key={item.id}
+                    item={item}
+                    isPinned={false}
+                    onToggle={() => togglePin(item.id)}
+                    transition={transition}
+                    className={itemClassName}
+                    pinIcon={pinIcon}
+                    unpinIcon={unpinIcon}
+                    enableDragReorder={false}
+                  />
+                ))
+              )}
             </div>
-          )}
-        </div>
+          </section>
+        )}
       </LayoutGroup>
     </motion.div>
   );
 }
 
-export { PinList, type PinListProps, type PinListItem };
+export { PinList as default, PinList };
