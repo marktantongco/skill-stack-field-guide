@@ -159,3 +159,31 @@ Stage Summary:
 - Each chapter: unique extraordinary title, unique palette, unique interactive demo, unique motion style.
 - Live section gracefully degrades (401 → rotation guide, not crash).
 - 21st.dev key still dead — user must rotate. Showcase doesn't depend on it.
+
+---
+Task ID: 8
+Agent: main (Super Z)
+Task: Rotate 21st.dev key (new 21st_sk_ format), update .env.local + git-crypt + Vercel env var, test @21st-dev/cli, add pin-list component.
+
+Work Log:
+- User provided new key in 21st_sk_ format (was an_sk_). Also referenced @21st-dev/cli as new canonical package (was @21st-dev/registry). Also pasted key in a shadcn URL (security risk — flagged).
+- Verified @21st-dev/cli v1.1.5 on npm — official package, bin is `21st`, "search, retrieve and install 21st.dev components". @21st-dev/registry (v0.0.9) still exists but is the older package.
+- Tested new key against 21st.dev API: HTTP 200, returns real navbar results. Key works.
+- Updated .env.local with new key (mode 0600). Local proxy verified: HTTP 200, 2 navbar results.
+- git-crypt binary had vanished from ~/.local/bin (sandbox reset). Reinstalled via apt-get download + dpkg-deb -x. Verified git-crypt 0.7.0.
+- Re-enabled .env.local git-crypt filter in .gitattributes (was commented out for Vercel). Updated .gitignore to un-ignore .env.local (git-crypt handles protection).
+- Configured git filter paths to use full /home/z/.local/bin/git-crypt path (git couldn't find it in PATH).
+- Committed .env.local encrypted: git-crypt status shows "encrypted", grep for "21st_sk_" in staged content = 0 matches. Verified ciphertext starts with GITCRYPT.
+- Vercel env var rotation: DELETE returned 200 but var still existed (Vercel API quirk). Used PATCH instead to update the value in place. PATCH returned encrypted value (success).
+- Triggered redeploy. Waited ~45s. Production verified: /api/components?q=navbar returns HTTP 200 with 3 real results (PrismaHero, AgencyViralHero, Core Header Navbar). Live search FIXED.
+- Installed @21st-dev/cli globally. `21st search "pin-list"` works (uses API_KEY_21ST env var, no key-in-URL).
+- marktantongco/pin-list does NOT exist on 21st.dev (shadcn add returned 500). Searched public registry, found @skyleen77/pin-list. Ran `21st add @skyleen77/pin-list` — component source written to src/components/ui/pin-list.tsx (192 lines, 6476 bytes). Uses motion/react, lucide-react, cn utility.
+- Lint: clean. Committed + pushed to GitHub. Vercel auto-deploy triggered.
+- SECURITY: User pasted key value in chat AND in a shadcn URL. Both are exposure events. Key-in-URL is especially dangerous (logged in server access logs, browser history, CDN logs, referrer headers). Flagged: never put API keys in URLs. Use env vars (API_KEY_21ST) — the 21st CLI auto-resolves.
+
+Stage Summary:
+- Production Live search RESTORED (was 401, now 200).
+- New key format 21st_sk_ deployed to both .env.local (git-crypt encrypted) and Vercel env var.
+- @21st-dev/cli installed + verified working.
+- pin-list component added to project.
+- Key still needs rotation — pasted in chat again this turn.
