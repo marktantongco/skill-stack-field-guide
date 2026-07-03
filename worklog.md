@@ -234,3 +234,30 @@ Stage Summary:
 - Publishable files ready in registry/pin-list/ (3 files).
 - Publish blocked by 21st.dev free-tier quota (0/2 remaining). Try again after quota resets (daily) or upgrade tier.
 - Exact publish command documented for user to run.
+
+---
+Task ID: 10
+Agent: main (Super Z)
+Task: Save BRAND_PREAMBLE.md + build Component Lab section (Prompt 7 from last turn).
+
+Work Log:
+- Wrote BRAND_PREAMBLE.md (repo root) — single source of brand truth. Documents: how to use (prepend to every prompt), the full preamble block (colors, type, motion, rules, voice, avoid, reasoning format, output format, constraint awareness), the 7 domain prompts table, decision tree, maintenance rule ("change a token here, not in any prompt"), changelog (v1.0.0).
+- Built ComponentLab.tsx (330 lines):
+  - Mobile frame (375px, iPhone-style, status bar + home indicator, no notch per brand rule #1)
+  - Live PinList component rendered inside the frame with real sample data (6 items, 2 pinned)
+  - 3 tabs: Preview (interactive demo) / Code (syntax-highlighted pin-list.tsx) / Install (CLI commands)
+  - Tab switching via Framer Motion layoutId animation (250ms ease-out per brand motion spec)
+  - Preview tab: mobile frame + "Try it" guide + "Built with" chips + "Brand alignment" note
+  - Code tab: scrollable pre/code block with copy button
+  - Install tab: 21st CLI command + shadcn CLI command + publish-status callout (amber, explains quota block)
+  - Copy buttons on code + install commands
+- Inserted ComponentLab into page.tsx after Showcase, before LiveComponents.
+- Added "Lab" to sticky nav (first position).
+- Lint: clean.
+- Agent-browser verification: Lab section present, "The Lab" heading renders, pin-list live (6 interactive rows, Settings heading visible), Code tab shows code block, Install tab shows "21st add @marktantongco/pin-list", 0 console errors. Screenshot captured.
+- Pushed to GitHub. Vercel auto-deployed: HTTP 200, production HTML confirms "The Lab" + "pin-list" present.
+
+Stage Summary:
+- BRAND_PREAMBLE.md is now the single source of brand truth — change a token here, every future prompt inherits it.
+- Component Lab is live on production: the pin-list is no longer invisible. Visitors can interact with it (search, pin/unpin, keyboard nav) in a real mobile frame.
+- The portfolio site now has 3 front-door experiences: Hero → 5-chapter Showcase → Component Lab → (existing wiki below).
