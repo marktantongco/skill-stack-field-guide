@@ -132,3 +132,30 @@ Stage Summary:
 - Vercel deploy: https://skill-stack-field-guide.vercel.app (production, HTTPS, live 21st.dev search working)
 - .env.local: NOT in repo (gitignored), API_KEY_21ST set as Vercel env var (encrypted)
 - 4 secrets need rotation: GitHub PAT (ghp_...), GitHub classic PAT (github_pat_...), Vercel AI gateway key (vck_...), Vercel token (vcp_...)
+
+---
+Task ID: 7
+Agent: main (Super Z)
+Task: Build 5-chapter scroll showcase — each chapter a distinct design approach with extraordinary title.
+
+Work Log:
+- User clarified next project: "a showcase of different design approach in stacking different npx skills add combinations, the title of every created page uniquely extraordinary award-winning beautiful-aesthetic, animated-interactive motion-intelligence."
+- Installed @studio-freight/lenis for smooth scroll.
+- Built src/components/Showcase.tsx (500+ lines): 5 full-screen chapters with scroll-snap, Lenis smooth scroll, GSAP ScrollTrigger for title reveals, chapter nav dots, per-chapter progress bar.
+- Chapter 1 "Where Numbers Become Light" — GSAP+Three.js aesthetic. Dark (#05070a) + emerald. Interactive: 3D parallax orb (CSS 3D + mouse tracking). Title: split-blur reveal via GSAP.
+- Chapter 2 "The Browser, Unburdened" — View Transitions+WAAPI. Warm (#faf7f2) + amber. Interactive: morphing cards (flex-based view-transition-style expansion).
+- Chapter 3 "Touch at 120 Hertz" — Rive+Tailwind. Vibrant (#0f0a1e) + violet. Interactive: spring-physics buttons (Framer Motion spring, stiffness 500, damping 12).
+- Chapter 4 "Silicon Dreams" — WebGPU+Shaders. Deep space (#030408) + neon cyan. Interactive: particle canvas (80 particles, proximity-line connections, requestAnimationFrame loop).
+- Chapter 5 "The Director's Cut" — Theatre.js+R3F. Cinematic (#0a0f0d) + gold. Interactive: cinematic reel with letterbox bars + timeline scrubber (range input, 120 frames).
+- Added ShowcaseIntro section before chapters: "The Stack Showcase" with gradient title.
+- Added graceful degradation to LiveComponents: 401 error now shows amber "API key needs rotation" card with 3-step fix instructions (instead of red crash). The showcase works independently of the dead key.
+- Inserted Showcase into page.tsx after Hero, before LiveComponents.
+- Lint: clean.
+- Agent-browser verification: 5 chapter wrappers, 5 chapter titles, 5 nav dots, 1 particle canvas, spring buttons present, 4 morph cards, cinematic reel present. 0 console errors. Screenshots captured (ch1: 3806 content pixels, ch4: 3341).
+- Pushed to GitHub. Vercel auto-deployed: state=READY, HTTP 200. Production HTML confirms showcase chapter titles present.
+
+Stage Summary:
+- 5-chapter showcase live on production: https://skill-stack-field-guide.vercel.app
+- Each chapter: unique extraordinary title, unique palette, unique interactive demo, unique motion style.
+- Live section gracefully degrades (401 → rotation guide, not crash).
+- 21st.dev key still dead — user must rotate. Showcase doesn't depend on it.
