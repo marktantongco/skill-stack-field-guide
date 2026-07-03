@@ -151,15 +151,27 @@ export default function LiveComponents() {
             <motion.div
               key="error"
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="flex items-start gap-3 rounded-2xl border border-rose-500/30 bg-rose-500/[0.08] p-5"
+              className="flex items-start gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/[0.08] p-5"
             >
-              <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-rose-300" />
-              <div className="text-sm text-rose-100">
-                <div className="font-semibold">Search failed</div>
-                <div className="mt-1 text-rose-200/80">{error}</div>
-                <div className="mt-2 text-xs text-rose-300/60">
-                  The 21st.dev API may be rate-limiting, or API_KEY_21ST may be invalid.
+              <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-300" />
+              <div className="text-sm text-amber-100">
+                <div className="font-semibold">API key needs rotation</div>
+                <div className="mt-1 text-amber-200/80">
+                  {error.includes("401") ? (
+                    <>The <code className="font-mono">API_KEY_21ST</code> has been revoked or expired. The proxy code is working — the credential is dead.</>
+                  ) : (
+                    error
+                  )}
                 </div>
+                {error.includes("401") && (
+                  <div className="mt-3 space-y-1 text-xs text-amber-300/70">
+                    <div><strong className="text-amber-200">Fix:</strong></div>
+                    <div>1. Generate a new key at <code className="font-mono">21st.dev/studio/&lt;handle&gt;/api-keys</code></div>
+                    <div>2. Update Vercel env var: <code className="font-mono">vercel env rm API_KEY_21ST production &amp;&amp; vercel env add API_KEY_21ST production</code></div>
+                    <div>3. Redeploy: <code className="font-mono">vercel deploy --prod</code></div>
+                    <div className="mt-2 text-amber-300/50">The Showcase above works independently of this key.</div>
+                  </div>
+                )}
               </div>
             </motion.div>
           )}

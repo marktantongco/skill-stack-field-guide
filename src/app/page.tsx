@@ -14,6 +14,7 @@ import {
   type Direction, type Combo,
 } from "@/lib/skillData";
 import LiveComponents from "@/components/LiveComponents";
+import Showcase from "@/components/Showcase";
 
 gsap.registerPlugin(useGSAP);
 
@@ -937,6 +938,7 @@ export default function Home() {
       <StickyNav />
       <main className="flex-1">
         <Hero />
+        <Showcase />
         <LiveComponents />
         <Foundations />
         <Combinations />
