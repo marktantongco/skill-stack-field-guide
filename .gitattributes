@@ -1,13 +1,10 @@
 # git-crypt — encrypt secrets at rest in git
 #
-# NOTE: .env.local is intentionally gitignored (see .gitignore) for Vercel
-# compatibility. Vercel cannot run `git-crypt unlock` during build, so the
-# API key is set as a Vercel environment variable instead.
-#
-# To re-enable committing .env.local encrypted (e.g. for a self-hosted deploy),
-# uncomment the line below AND remove the .env.local exception in .gitignore:
-#
-# .env.local filter=git-crypt diff=git-crypt
+# .env.local is encrypted via git-crypt. Safe to commit.
+# Vercel uses a separate env var (API_KEY_21ST set in Vercel dashboard)
+# because Vercel cannot run `git-crypt unlock` during build.
+
+.env.local filter=git-crypt diff=git-crypt
 
 # Encrypt any other secret files
 *.secret filter=git-crypt diff=git-crypt
