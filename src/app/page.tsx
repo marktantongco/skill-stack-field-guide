@@ -15,6 +15,7 @@ import {
 } from "@/lib/skillData";
 import LiveComponents from "@/components/LiveComponents";
 import Showcase from "@/components/Showcase";
+import ComponentLab from "@/components/ComponentLab";
 
 gsap.registerPlugin(useGSAP);
 
@@ -203,6 +204,7 @@ function Hero() {
 function StickyNav() {
   const [open, setOpen] = useState(false);
   const links = [
+    { href: "#lab", label: "Lab" },
     { href: "#live", label: "Live 21st" },
     { href: "#foundations", label: "Foundations" },
     { href: "#combinations", label: "30 Combos" },
@@ -939,6 +941,7 @@ export default function Home() {
       <main className="flex-1">
         <Hero />
         <Showcase />
+        <ComponentLab />
         <LiveComponents />
         <Foundations />
         <Combinations />
