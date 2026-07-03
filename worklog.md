@@ -261,3 +261,57 @@ Stage Summary:
 - BRAND_PREAMBLE.md is now the single source of brand truth — change a token here, every future prompt inherits it.
 - Component Lab is live on production: the pin-list is no longer invisible. Visitors can interact with it (search, pin/unpin, keyboard nav) in a real mobile frame.
 - The portfolio site now has 3 front-door experiences: Hero → 5-chapter Showcase → Component Lab → (existing wiki below).
+
+---
+Task ID: 11
+Agent: main (Super Z)
+Task: Mock test production Lab + build component #2 (Command Palette).
+
+Work Log:
+- MOCK TEST (production, 390x844 mobile viewport):
+  1. ✅ Lab renders (6 pin-list rows)
+  2. ✅ Code tab shows code block
+  3. ✅ Install tab shows "21st add @marktantongco/pin-list"
+  4. ✅ Search "notif" → filters to 1 row (Notifications)
+  5. ✅ Clear search → back to 6 rows
+  6. ✅ Click "Profile" → moves to Pinned section (3 pinned)
+  7. ✅ Right-click "Notifications" → quick-unpin → moves to Unpinned (2 pinned)
+  8. ✅ Zero console errors
+  Mobile frame looks clean at 390px — no tuning needed.
+
+- BUILT Command Palette (src/components/ui/command-palette.tsx, 220 lines):
+  - Cmd+K / Ctrl+K global shortcut (window keydown listener)
+  - Fuzzy search: case-insensitive substring, position-weighted scoring
+  - Arrow-key nav (up/down), Enter to select, Esc to close
+  - Grouped results (Actions / Preferences / Help / Account)
+  - Focus trap: input auto-focuses on open, aria-activedescendant for SR
+  - 44px min touch targets, kbd hint chips
+  - Backdrop click closes, 150ms overlay fade + 200ms panel scale (brand motion)
+  - 7 sample commands with icons, shortcuts, keywords
+
+- REFACTORED ComponentLab.tsx: multi-component selector
+  - Pin List (default) — mobile frame, interactive
+  - Command Palette — centered demo, Cmd+K trigger button
+  - Each: Preview/Code/Install tabs, try-it guide, built-with, brand alignment
+  - Component-agnostic wrapper (ready for component #3)
+
+- FIXED: lucide-react has no 'Esc' export (caused 500). Replaced with X icon.
+
+- VERIFIED (agent-browser):
+  - Pin List active by default
+  - Both selectors present (Pin List | Command Palette)
+  - Command Palette selector → demo visible
+  - Open button → palette overlay opens (7 options)
+  - Search "invoice" → 1 result (Create new invoice)
+  - Backdrop click closes
+  - Cmd+K reopens palette (global shortcut works)
+  - Switching between components works
+  - 0 console errors, lint clean
+
+- Pushed to GitHub. Vercel auto-deployed: HTTP 200. Production HTML confirms "The Lab", "Pin List", "Command Palette".
+
+Stage Summary:
+- Mock test passed all 7 user-specified interactions on production.
+- Component #2 (Command Palette) live in The Lab.
+- Lab now has 2 components — portfolio is building real volume.
+- Wrapper is component-agnostic — component #3 slots in with ~30 lines.
