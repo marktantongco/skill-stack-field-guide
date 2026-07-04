@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 
 /**
- * POST /api/seed — populates the database with KPI mock data.
- * Idempotent: upserts (creates or updates) each metric.
+ * POST /api/seed — populates the database with KPI mock data + demo user.
+ * Idempotent: upserts (creates or updates) each metric + user.
+ *
+ * Demo user: demo@skillstack.dev / demo1234
  */
 
 export const runtime = "nodejs";
@@ -102,7 +105,20 @@ export async function POST() {
       });
     }
 
-    return NextResponse.json({ seeded: true, metricsCount: count, ranges: Object.keys(RANGES) });
+    // create demo user for auth (demo@skillstack.dev / demo1234)
+    // name field stores the bcrypt hash for the demo
+    const existingUser = await db.user.findUnique({ where: { email: "demo@skillstack.dev" } });
+    if (!existingUser) {
+      const hash = await bcrypt.hash("demo1234", 10);
+      await db.user.create({
+        data: {
+          email: "demo@skillstack.dev",
+          name: hash, // stores password hash for demo credentials provider
+        },
+      });
+    }
+
+    return NextResponse.json({ seeded: true, metricsCount: count, ranges: Object.keys(RANGES), demoUser: "demo@skillstack.dev / demo1234" });
   } catch (err) {
     return NextResponse.json(
       { error: "Seed failed", detail: err instanceof Error ? err.message : String(err) },

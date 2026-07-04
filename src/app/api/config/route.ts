@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 
 /**
- * GET /api/config — returns the demo user's dashboard config (or defaults)
+ * GET /api/config — returns the authenticated user's dashboard config
  * PUT /api/config — updates the config (body: partial DashboardConfig)
  *
- * Multi-user ready: pass ?userId=xxx to scope. For demo, userId is null (shared default).
+ * MULTI-USER: userId comes from the NextAuth session (JWT).
+ * Unauthenticated requests fall back to null userId (demo/shared config).
  */
 
 export const runtime = "nodejs";
@@ -58,13 +61,13 @@ async function getOrCreateConfig(userId: string | null) {
   };
 }
 
-export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const userId = searchParams.get("userId"); // null for demo
+export async function GET() {
+  const session = await getServerSession(authOptions);
+  const userId = (session?.user as any)?.id ?? null; // null = demo/shared config
 
   try {
     const config = await getOrCreateConfig(userId);
-    return NextResponse.json({ config, source: "database" });
+    return NextResponse.json({ config, source: "database", userId: userId ?? "demo" });
   } catch (err) {
     return NextResponse.json(
       { error: "Database error", detail: err instanceof Error ? err.message : String(err) },
@@ -74,8 +77,8 @@ export async function GET(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const userId = searchParams.get("userId");
+  const session = await getServerSession(authOptions);
+  const userId = (session?.user as any)?.id ?? null;
 
   try {
     const body = await req.json();

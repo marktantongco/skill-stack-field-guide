@@ -19,6 +19,7 @@ import ComponentLab from "@/components/ComponentLab";
 import DataVizLab from "@/components/DataVizLab";
 import SettingsLab from "@/components/SettingsLab";
 import { useConfigStore } from "@/lib/config-store";
+import { UserMenu } from "@/components/UserMenu";
 
 gsap.registerPlugin(useGSAP);
 
@@ -235,9 +236,12 @@ function StickyNav() {
             </a>
           ))}
         </nav>
-        <button onClick={() => setOpen(!open)} className="grid h-9 w-9 place-items-center rounded-lg border border-white/10 text-white md:hidden" aria-label="Menu">
-          <ChevronDown className={`h-5 w-5 transition ${open ? "rotate-180" : ""}`} />
-        </button>
+        <div className="flex items-center gap-2">
+          <UserMenu />
+          <button onClick={() => setOpen(!open)} className="grid h-9 w-9 place-items-center rounded-lg border border-white/10 text-white md:hidden" aria-label="Menu">
+            <ChevronDown className={`h-5 w-5 transition ${open ? "rotate-180" : ""}`} />
+          </button>
+        </div>
       </div>
       <AnimatePresence>
         {open && (
