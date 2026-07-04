@@ -33,6 +33,11 @@ interface KPIMetric {
   data: { day: string; v: number }[];
 }
 
+// Map icon names from DB to lucide components
+const ICON_MAP: Record<string, React.ElementType> = {
+  DollarSign, Users, ShoppingCart, Zap,
+};
+
 function genSeries(base: number, vol: number, days: number): { day: string; v: number }[] {
   const out: { day: string; v: number }[] = [];
   let v = base;
@@ -168,13 +173,41 @@ export default function DataVizLab() {
   const [paletteOpen, setPaletteOpen] = React.useState(false);
   const { toasts, toast, dismiss } = useToasts();
 
-  // Filter KPIs by store config (visibleKpis)
-  const allKpis = KPIS[range];
-  const kpis = allKpis.filter((k) => visibleKpis.has(k.id as any));
-  const activeKpi = kpis.find((k) => k.id === activeMetric) ?? kpis[0];
+  // FULL-STACK: fetch KPI data from the backend API (replaces mock data)
+  const [kpis, setKpis] = React.useState<KPIMetric[]>([]);
+  const [loading, setLoading] = React.useState(true);
 
-  // Pin list items (derived from KPIs)
-  const pinItems: PinListItem[] = kpis.map((k) => ({
+  React.useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    fetch(`/api/metrics?range=${range}`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (!cancelled && d.results) {
+          // attach format function + icon component (not serializable in DB)
+          const formatted = d.results.map((m: any) => ({
+            ...m,
+            icon: ICON_MAP[m.icon] ?? Zap,
+            format: m.id === "conv"
+              ? (n: number) => `${n}%`
+              : m.id === "rev"
+              ? (n: number) => `$${n.toLocaleString()}`
+              : (n: number) => n.toLocaleString(),
+          }));
+          setKpis(formatted);
+        }
+      })
+      .catch(() => { /* silent fail — keep last data */ })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [range]);
+
+  // Filter KPIs by store config (visibleKpis)
+  const visibleKpiList = kpis.filter((k) => visibleKpis.has(k.id as any));
+  const activeKpi = visibleKpiList.find((k) => k.id === activeMetric) ?? visibleKpiList[0];
+
+  // Pin list items (derived from KPIs — all fetched from API)
+  const pinItems: PinListItem[] = visibleKpiList.map((k) => ({
     id: k.id,
     name: k.label,
     info: k.format(k.value),
@@ -192,9 +225,9 @@ export default function DataVizLab() {
     });
   };
 
-  // Command palette items — switch metric + range
+  // Command palette items — switch metric + range (uses visibleKpiList)
   const commandItems: CommandItem[] = [
-    ...kpis.map((k) => ({
+    ...visibleKpiList.map((k) => ({
       id: `metric-${k.id}`,
       label: `View ${k.label}`,
       icon: k.icon,
@@ -305,17 +338,27 @@ export default function DataVizLab() {
 
         {/* KPI row */}
         <div className="mb-8 grid grid-cols-2 gap-3 lg:grid-cols-4">
-          {kpis
-            .slice()
-            .sort((a, b) => Number(pinnedIds.has(b.id)) - Number(pinnedIds.has(a.id)))
-            .map((kpi) => (
-              <KPICard
-                key={kpi.id}
-                kpi={kpi}
-                pinned={pinnedIds.has(kpi.id)}
-                onTogglePin={() => togglePin(kpi.id)}
-              />
-            ))}
+          {loading ? (
+            <div className="col-span-full grid place-items-center py-8 text-sm text-zinc-500">
+              Loading KPIs from backend…
+            </div>
+          ) : visibleKpiList.length === 0 ? (
+            <div className="col-span-full grid place-items-center py-8 text-sm text-zinc-500">
+              No KPIs visible. Enable some in the Controls below.
+            </div>
+          ) : (
+            visibleKpiList
+              .slice()
+              .sort((a, b) => Number(pinnedIds.has(b.id)) - Number(pinnedIds.has(a.id)))
+              .map((kpi) => (
+                <KPICard
+                  key={kpi.id}
+                  kpi={kpi}
+                  pinned={pinnedIds.has(kpi.id)}
+                  onTogglePin={() => togglePin(kpi.id)}
+                />
+              ))
+          )}
         </div>
 
         {/* charts + pin list */}
@@ -324,25 +367,33 @@ export default function DataVizLab() {
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 lg:col-span-2">
             <div className="mb-4 flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-semibold text-white">{activeKpi.label} trend</h3>
-                <p className="text-xs text-zinc-500">{range} · {activeKpi.format(activeKpi.value)}</p>
+                <h3 className="text-sm font-semibold text-white">
+                  {activeKpi ? `${activeKpi.label} trend` : "Trend"}
+                </h3>
+                <p className="text-xs text-zinc-500">
+                  {range}{activeKpi ? ` · ${activeKpi.format(activeKpi.value)}` : ""}
+                </p>
               </div>
             </div>
             <div className="h-56">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={activeKpi.data} margin={{ top: 5, right: 5, bottom: 0, left: -20 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" vertical={false} />
-                  <XAxis dataKey="day" tick={{ fontSize: 10, fill: "#64748B" }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 10, fill: "#64748B" }} axisLine={false} tickLine={false} />
-                  <Tooltip
-                    contentStyle={{
-                      background: "#0F172A", border: "1px solid #334155",
-                      borderRadius: 8, fontSize: 12, color: "#F8FAFC",
-                    }}
-                  />
-                  <Line type="monotone" dataKey="v" stroke="#2563EB" strokeWidth={2} dot={false} />
-                </LineChart>
-              </ResponsiveContainer>
+              {activeKpi ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={activeKpi.data} margin={{ top: 5, right: 5, bottom: 0, left: -20 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" vertical={false} />
+                    <XAxis dataKey="day" tick={{ fontSize: 10, fill: "#64748B" }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fontSize: 10, fill: "#64748B" }} axisLine={false} tickLine={false} />
+                    <Tooltip
+                      contentStyle={{
+                        background: "#0F172A", border: "1px solid #334155",
+                        borderRadius: 8, fontSize: 12, color: "#F8FAFC",
+                      }}
+                    />
+                    <Line type="monotone" dataKey="v" stroke="#2563EB" strokeWidth={2} dot={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="grid h-full place-items-center text-sm text-zinc-500">Loading chart…</div>
+              )}
             </div>
           </div>
 

@@ -18,6 +18,7 @@ import Showcase from "@/components/Showcase";
 import ComponentLab from "@/components/ComponentLab";
 import DataVizLab from "@/components/DataVizLab";
 import SettingsLab from "@/components/SettingsLab";
+import { useConfigStore } from "@/lib/config-store";
 
 gsap.registerPlugin(useGSAP);
 
@@ -937,6 +938,9 @@ export default function Home() {
   const scaleX = useSpring(scrollYProgress, { stiffness: 120, damping: 30, restDelta: 0.001 });
   // set dark theme on body
   useEffect(() => { document.documentElement.classList.add("dark"); }, []);
+  // FULL-STACK: hydrate dashboard config from backend on mount
+  const hydrateFromBackend = useConfigStore((s) => s.hydrateFromBackend);
+  useEffect(() => { hydrateFromBackend(); }, [hydrateFromBackend]);
 
   return (
     <div id="top" className="relative min-h-screen bg-zinc-950 text-zinc-100">
