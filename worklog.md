@@ -422,3 +422,47 @@ Stage Summary:
 - The portfolio is now a SYSTEM: Dashboard consumes Toast + Command Palette + Pin List.
 - 10 skills verified on skills.sh + 3 rtk-ai repos verified on GitHub.
 - The horizontal move is complete — Component Lab → Data Viz Lab (factory #2 consumes factory #1).
+
+---
+Task ID: 14
+Agent: main (Super Z)
+Task: Mock test Dashboard system + build Settings Lab (3rd factory — consumes Dashboard + Component Lab).
+
+Work Log:
+- MOCK TEST (Dashboard system flow, production):
+  1. ✅ Scroll to Dashboard
+  2. ✅ Cmd+K opens palette
+  3. ✅ Type "90D" → 1 fuzzy result ("Range: 90D")
+  4. ✅ Click → toast fires ("Range changed to 90D")
+  5. ✅ Click star on Conversion → emerald border + aria-pressed=true
+  6. ✅ Conversion sorts to front (alongside Revenue which was already pinned)
+  7. ✅ Zero console errors
+
+- BUILT Settings Lab (3rd factory):
+  - config-store.ts (Zustand + persist middleware): visibleKpis, defaultRange, refreshInterval, dashboardTitle, showTable, showBarChart. Set serialization for localStorage (array ↔ Set on hydration).
+  - SettingsLab.tsx (280 lines): 5 panels — dashboard title (auto-save 600ms), visible KPIs (toggle switches), default time range (4 buttons), refresh interval (slider 0-30s), surface toggles (table + bar chart). Reset button. System note callout.
+  - Consumes Toast (fires on every save: "Orders hidden", "Default range: 90D", etc.)
+  - Toggle switches with spring physics (stiffness 500, damping 30 — brand motion)
+
+- WIRED DataVizLab to read from shared store:
+  - KPIs filtered by visibleKpis from store
+  - Dashboard title from store (user-customizable)
+  - Refresh interval from store (0 = off, controls real-time toast frequency)
+  - Data table + bar chart conditionally rendered based on showTable/showBarChart
+
+- SYSTEM VERIFICATION:
+  - Toggle Orders OFF in Settings Lab → toast "Orders hidden" fires
+  - Scroll to Dashboard → KPI card count: 3 (Revenue, Active users, Conversion)
+  - Orders KPI card disappeared from Dashboard ✅
+  - Zustand persist: settings survive page refresh (localStorage)
+  - Zero console errors, lint clean
+
+- Pushed to GitHub. Vercel auto-deployed: HTTP 200. Production HTML confirms "The Controls" + "Visible KPIs".
+
+Stage Summary:
+- Settings Lab live on production: 3rd factory.
+- Portfolio is now a 3-LAYER SYSTEM:
+  Layer 1 (Component Lab): Pin List + Command Palette + Toast
+  Layer 2 (Data Viz Lab): Dashboard consuming all 3 components
+  Layer 3 (Settings Lab): Controls consuming Dashboard + Toast, writes to shared Zustand store
+- Each layer proves the previous one was built right: components compose into a dashboard, dashboard is configurable from a settings page, settings persist across sessions.
