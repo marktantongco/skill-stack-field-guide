@@ -1,129 +1,219 @@
-"use client"
+'use client';
 
-import * as React from "react"
-import * as ToastPrimitives from "@radix-ui/react-toast"
-import { cva, type VariantProps } from "class-variance-authority"
-import { X } from "lucide-react"
+import * as React from 'react';
+import {
+  CheckCircle2,
+  AlertCircle,
+  AlertTriangle,
+  Info,
+  X,
+  type LucideIcon,
+} from 'lucide-react';
+import {
+  motion,
+  AnimatePresence,
+  type PanInfo,
+} from 'motion/react';
+import { cn } from '@/lib/utils';
 
-import { cn } from "@/lib/utils"
+/* ------------------------------------------------------------------ */
+/* Types                                                               */
+/* ------------------------------------------------------------------ */
 
-const ToastProvider = ToastPrimitives.Provider
+export type ToastVariant = 'success' | 'error' | 'warning' | 'info';
 
-const ToastViewport = React.forwardRef<
-  React.ElementRef<typeof ToastPrimitives.Viewport>,
-  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Viewport>
->(({ className, ...props }, ref) => (
-  <ToastPrimitives.Viewport
-    ref={ref}
-    className={cn(
-      "fixed top-0 z-[100] flex max-h-screen w-full flex-col-reverse p-4 sm:bottom-0 sm:right-0 sm:top-auto sm:flex-col md:max-w-[420px]",
-      className
-    )}
-    {...props}
-  />
-))
-ToastViewport.displayName = ToastPrimitives.Viewport.displayName
-
-const toastVariants = cva(
-  "group pointer-events-auto relative flex w-full items-center justify-between space-x-2 overflow-hidden rounded-md border p-4 pr-6 shadow-lg transition-all data-[swipe=cancel]:translate-x-0 data-[swipe=end]:translate-x-[var(--radix-toast-swipe-end-x)] data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[swipe=move]:transition-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[swipe=end]:animate-out data-[state=closed]:fade-out-80 data-[state=closed]:slide-out-to-right-full data-[state=open]:slide-in-from-top-full data-[state=open]:sm:slide-in-from-bottom-full",
-  {
-    variants: {
-      variant: {
-        default: "border bg-background text-foreground",
-        destructive:
-          "destructive group border-destructive bg-destructive text-destructive-foreground",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-    },
-  }
-)
-
-const Toast = React.forwardRef<
-  React.ElementRef<typeof ToastPrimitives.Root>,
-  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Root> &
-  VariantProps<typeof toastVariants>
->(({ className, variant, ...props }, ref) => {
-  return (
-    <ToastPrimitives.Root
-      ref={ref}
-      className={cn(toastVariants({ variant }), className)}
-      {...props}
-    />
-  )
-})
-Toast.displayName = ToastPrimitives.Root.displayName
-
-const ToastAction = React.forwardRef<
-  React.ElementRef<typeof ToastPrimitives.Action>,
-  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Action>
->(({ className, ...props }, ref) => (
-  <ToastPrimitives.Action
-    ref={ref}
-    className={cn(
-      "inline-flex h-8 shrink-0 items-center justify-center rounded-md border bg-transparent px-3 text-sm font-medium transition-colors hover:bg-secondary focus:outline-none focus:ring-1 focus:ring-ring disabled:pointer-events-none disabled:opacity-50 group-[.destructive]:border-muted/40 group-[.destructive]:hover:border-destructive/30 group-[.destructive]:hover:bg-destructive group-[.destructive]:hover:text-destructive-foreground group-[.destructive]:focus:ring-destructive",
-      className
-    )}
-    {...props}
-  />
-))
-ToastAction.displayName = ToastPrimitives.Action.displayName
-
-const ToastClose = React.forwardRef<
-  React.ElementRef<typeof ToastPrimitives.Close>,
-  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Close>
->(({ className, ...props }, ref) => (
-  <ToastPrimitives.Close
-    ref={ref}
-    className={cn(
-      "absolute right-1 top-1 rounded-md p-1 text-foreground/50 opacity-0 transition-opacity hover:text-foreground focus:opacity-100 focus:outline-none focus:ring-1 group-hover:opacity-100 group-[.destructive]:text-red-300 group-[.destructive]:hover:text-red-50 group-[.destructive]:focus:ring-red-400 group-[.destructive]:focus:ring-offset-red-600",
-      className
-    )}
-    toast-close=""
-    {...props}
-  >
-    <X className="h-4 w-4" />
-  </ToastPrimitives.Close>
-))
-ToastClose.displayName = ToastPrimitives.Close.displayName
-
-const ToastTitle = React.forwardRef<
-  React.ElementRef<typeof ToastPrimitives.Title>,
-  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Title>
->(({ className, ...props }, ref) => (
-  <ToastPrimitives.Title
-    ref={ref}
-    className={cn("text-sm font-semibold [&+div]:text-xs", className)}
-    {...props}
-  />
-))
-ToastTitle.displayName = ToastPrimitives.Title.displayName
-
-const ToastDescription = React.forwardRef<
-  React.ElementRef<typeof ToastPrimitives.Description>,
-  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Description>
->(({ className, ...props }, ref) => (
-  <ToastPrimitives.Description
-    ref={ref}
-    className={cn("text-sm opacity-90", className)}
-    {...props}
-  />
-))
-ToastDescription.displayName = ToastPrimitives.Description.displayName
-
-type ToastProps = React.ComponentPropsWithoutRef<typeof Toast>
-
-type ToastActionElement = React.ReactElement<typeof ToastAction>
-
-export {
-  type ToastProps,
-  type ToastActionElement,
-  ToastProvider,
-  ToastViewport,
-  Toast,
-  ToastTitle,
-  ToastDescription,
-  ToastClose,
-  ToastAction,
+export interface Toast {
+  id: string;
+  title: string;
+  description?: string;
+  variant?: ToastVariant;
+  duration?: number; // ms, 0 = persistent
+  action?: { label: string; onClick: () => void };
 }
+
+export interface ToastViewportProps {
+  toasts: Toast[];
+  onDismiss: (id: string) => void;
+  className?: string;
+}
+
+/* ------------------------------------------------------------------ */
+/* Variant config                                                     */
+/* ------------------------------------------------------------------ */
+
+const VARIANT_CONFIG: Record<
+  ToastVariant,
+  { icon: LucideIcon; accent: string; bg: string; border: string; fg: string }
+> = {
+  success: {
+    icon: CheckCircle2,
+    accent: '#10B981',
+    bg: 'bg-emerald-50 dark:bg-emerald-950/40',
+    border: 'border-emerald-200 dark:border-emerald-800',
+    fg: 'text-emerald-900 dark:text-emerald-100',
+  },
+  error: {
+    icon: AlertCircle,
+    accent: '#EF4444',
+    bg: 'bg-rose-50 dark:bg-rose-950/40',
+    border: 'border-rose-200 dark:border-rose-800',
+    fg: 'text-rose-900 dark:text-rose-100',
+  },
+  warning: {
+    icon: AlertTriangle,
+    accent: '#F59E0B',
+    bg: 'bg-amber-50 dark:bg-amber-950/40',
+    border: 'border-amber-200 dark:border-amber-800',
+    fg: 'text-amber-900 dark:text-amber-100',
+  },
+  info: {
+    icon: Info,
+    accent: '#2563EB',
+    bg: 'bg-blue-50 dark:bg-blue-950/40',
+    border: 'border-blue-200 dark:border-blue-800',
+    fg: 'text-blue-900 dark:text-blue-100',
+  },
+};
+
+/* ------------------------------------------------------------------ */
+/* Single toast                                                       */
+/* ------------------------------------------------------------------ */
+
+function ToastItem({
+  toast,
+  onDismiss,
+}: {
+  toast: Toast;
+  onDismiss: (id: string) => void;
+}) {
+  const config = VARIANT_CONFIG[toast.variant ?? 'info'];
+  const Icon = config.icon;
+
+  // Swipe-to-dismiss
+  const onDragEnd = (_: unknown, info: PanInfo) => {
+    if (Math.abs(info.offset.x) > 100 || Math.abs(info.offset.y) > 80) {
+      onDismiss(toast.id);
+    }
+  };
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, x: 32, scale: 0.95 }}
+      animate={{ opacity: 1, x: 0, scale: 1 }}
+      exit={{ opacity: 0, x: 32, scale: 0.95 }}
+      transition={{ duration: 0.2, ease: [0, 0, 0.2, 1] }}
+      drag="x"
+      dragConstraints={{ left: 0, right: 0 }}
+      dragElastic={0.6}
+      onDragEnd={onDragEnd}
+      role="status"
+      aria-live={toast.variant === 'error' ? 'assertive' : 'polite'}
+      className={cn(
+        'pointer-events-auto flex w-full items-start gap-3 rounded-xl border p-3.5 shadow-lg backdrop-blur-sm',
+        config.bg,
+        config.border,
+        config.fg,
+      )}
+    >
+      {/* icon */}
+      <Icon className="mt-0.5 size-5 shrink-0" style={{ color: config.accent }} aria-hidden />
+
+      {/* content */}
+      <div className="min-w-0 flex-1">
+        <div className="text-sm font-semibold">{toast.title}</div>
+        {toast.description && (
+          <div className="mt-0.5 text-xs opacity-80">{toast.description}</div>
+        )}
+        {toast.action && (
+          <button
+            onClick={() => {
+              toast.action!.onClick();
+              onDismiss(toast.id);
+            }}
+            className="mt-2 inline-flex h-7 items-center rounded-md px-2.5 text-xs font-semibold transition hover:bg-black/5 dark:hover:bg-white/10"
+            style={{ color: config.accent }}
+          >
+            {toast.action.label}
+          </button>
+        )}
+      </div>
+
+      {/* dismiss */}
+      <button
+        onClick={() => onDismiss(toast.id)}
+        className="grid size-7 shrink-0 place-items-center rounded-md opacity-50 transition hover:bg-black/5 hover:opacity-100 dark:hover:bg-white/10"
+        aria-label="Dismiss notification"
+      >
+        <X className="size-3.5" />
+      </button>
+    </motion.div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Viewport (top-right on desktop, top on mobile)                     */
+/* ------------------------------------------------------------------ */
+
+function ToastViewport({ toasts, onDismiss, className }: ToastViewportProps) {
+  return (
+    <div
+      className={cn(
+        'pointer-events-none fixed top-4 right-4 z-[200] flex w-full max-w-sm flex-col gap-2 sm:top-6 sm:right-6',
+        className,
+      )}
+      role="region"
+      aria-label="Notifications"
+    >
+      <AnimatePresence initial={false}>
+        {toasts.map((t) => (
+          <ToastItem key={t.id} toast={t} onDismiss={onDismiss} />
+        ))}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Hook: useToasts                                                    */
+/* ------------------------------------------------------------------ */
+
+export function useToasts() {
+  const [toasts, setToasts] = React.useState<Toast[]>([]);
+  const timeouts = React.useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+
+  const dismiss = React.useCallback((id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+    const handle = timeouts.current.get(id);
+    if (handle) {
+      clearTimeout(handle);
+      timeouts.current.delete(id);
+    }
+  }, []);
+
+  const toast = React.useCallback(
+    (t: Omit<Toast, 'id'> & { id?: string }) => {
+      const id = t.id ?? Math.random().toString(36).slice(2);
+      const duration = t.duration ?? 5000;
+      setToasts((prev) => [...prev, { ...t, id }]);
+      if (duration > 0) {
+        const handle = setTimeout(() => dismiss(id), duration);
+        timeouts.current.set(id, handle);
+      }
+      return id;
+    },
+    [dismiss],
+  );
+
+  // cleanup on unmount
+  React.useEffect(() => {
+    return () => {
+      timeouts.current.forEach((h) => clearTimeout(h));
+      timeouts.current.clear();
+    };
+  }, []);
+
+  return { toasts, toast, dismiss };
+}
+
+export { ToastViewport as default, ToastViewport };

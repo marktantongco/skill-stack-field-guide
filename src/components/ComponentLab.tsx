@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import PinList, { type PinListItem } from "@/components/ui/pin-list";
 import CommandPalette, { type CommandItem } from "@/components/ui/command-palette";
+import ToastViewport, { useToasts, type ToastVariant } from "@/components/ui/toast";
 
 /* ================================================================== */
 /* Component registry — each entry is a lab component                 */
@@ -274,6 +275,161 @@ function CommandPaletteDemo() {
   );
 }
 
+/* ------------------------------------------------------------------ */
+/* Toast demo wrapper (trigger buttons + viewport)                    */
+/* ------------------------------------------------------------------ */
+
+const TOAST_CODE = `import * as React from "react";
+import { CheckCircle2, AlertCircle, AlertTriangle, Info, X } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+
+export type ToastVariant = 'success' | 'error' | 'warning' | 'info';
+
+export interface Toast {
+  id: string;
+  title: string;
+  description?: string;
+  variant?: ToastVariant;
+  duration?: number; // 0 = persistent
+  action?: { label: string; onClick: () => void };
+}
+
+const VARIANTS = {
+  success: { icon: CheckCircle2, color: '#10B981' },
+  error:   { icon: AlertCircle,   color: '#EF4444' },
+  warning: { icon: AlertTriangle, color: '#F59E0B' },
+  info:    { icon: Info,          color: '#2563EB' },
+};
+
+export function useToasts() {
+  const [toasts, setToasts] = React.useState<Toast[]>([]);
+  const timers = React.useRef(new Map());
+
+  const dismiss = React.useCallback((id) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
+    clearTimeout(timers.current.get(id));
+    timers.current.delete(id);
+  }, []);
+
+  const toast = React.useCallback((t) => {
+    const id = t.id ?? Math.random().toString(36).slice(2);
+    const duration = t.duration ?? 5000;
+    setToasts(prev => [...prev, { ...t, id }]);
+    if (duration > 0) {
+      const h = setTimeout(() => dismiss(id), duration);
+      timers.current.set(id, h);
+    }
+    return id;
+  }, [dismiss]);
+
+  return { toasts, toast, dismiss };
+}
+
+function ToastItem({ toast, onDismiss }) {
+  const v = VARIANTS[toast.variant ?? 'info'];
+  const Icon = v.icon;
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, x: 32, scale: 0.95 }}
+      animate={{ opacity: 1, x: 0, scale: 1 }}
+      exit={{ opacity: 0, x: 32, scale: 0.95 }}
+      transition={{ duration: 0.2, ease: [0, 0, 0.2, 1] }}
+      drag="x"
+      dragConstraints={{ left: 0, right: 0 }}
+      dragElastic={0.6}
+      onDragEnd={(_, info) => {
+        if (Math.abs(info.offset.x) > 100) onDismiss(toast.id);
+      }}
+      role="status"
+      aria-live={toast.variant === 'error' ? 'assertive' : 'polite'}
+      className="flex w-full items-start gap-3 rounded-xl border p-3.5
+                 shadow-lg backdrop-blur-sm bg-white dark:bg-zinc-900"
+    >
+      <Icon style={{ color: v.color }} className="mt-0.5 size-5 shrink-0" />
+      <div className="min-w-0 flex-1">
+        <div className="text-sm font-semibold">{toast.title}</div>
+        {toast.description && (
+          <div className="mt-0.5 text-xs opacity-80">{toast.description}</div>
+        )}
+        {toast.action && (
+          <button onClick={() => { toast.action.onClick(); onDismiss(toast.id); }}
+            className="mt-2 text-xs font-semibold" style={{ color: v.color }}>
+            {toast.action.label}
+          </button>
+        )}
+      </div>
+      <button onClick={() => onDismiss(toast.id)} aria-label="Dismiss">
+        <X className="size-3.5" />
+      </button>
+    </motion.div>
+  );
+}
+
+export function ToastViewport({ toasts, onDismiss }) {
+  return (
+    <div className="fixed top-4 right-4 z-[200] flex w-full max-w-sm
+                    flex-col gap-2">
+      <AnimatePresence initial={false}>
+        {toasts.map(t => (
+          <ToastItem key={t.id} toast={t} onDismiss={onDismiss} />
+        ))}
+      </AnimatePresence>
+    </div>
+  );
+}`;
+
+function ToastDemo() {
+  const { toasts, toast, dismiss } = useToasts();
+
+  const trigger = (variant: ToastVariant) => {
+    const presets: Record<ToastVariant, { title: string; description: string }> = {
+      success: { title: "Payment received", description: "Invoice #2026-0042 paid via Stripe." },
+      error: { title: "Export failed", description: "CSV generation timed out. Try again." },
+      warning: { title: "Trial ending soon", description: "2 days left on your free plan." },
+      info: { title: "New version available", description: "v2.4.0 — refresh to update." },
+    };
+    const preset = presets[variant];
+    toast({
+      ...preset,
+      variant,
+      duration: variant === 'error' ? 0 : 5000,
+      action: variant === 'warning'
+        ? { label: "Upgrade", onClick: () => {} }
+        : variant === 'info'
+        ? { label: "Refresh", onClick: () => {} }
+        : undefined,
+    });
+  };
+
+  const buttons: { variant: ToastVariant; label: string }[] = [
+    { variant: "success", label: "Success" },
+    { variant: "error", label: "Error" },
+    { variant: "warning", label: "Warning" },
+    { variant: "info", label: "Info" },
+  ];
+
+  return (
+    <div className="flex flex-col items-center gap-6 py-8">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {buttons.map((b) => (
+          <button
+            key={b.variant}
+            onClick={() => trigger(b.variant)}
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-neutral-300 bg-white px-4 text-sm font-medium text-neutral-700 shadow-sm transition hover:border-neutral-400 hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700"
+          >
+            {b.label}
+          </button>
+        ))}
+      </div>
+      <p className="max-w-xs text-center text-xs text-neutral-400">
+        Click a button to fire a toast. Swipe right to dismiss. Error toasts persist until closed.
+      </p>
+      <ToastViewport toasts={toasts} onDismiss={dismiss} />
+    </div>
+  );
+}
+
 /* ================================================================== */
 /* Lab components registry                                            */
 /* ================================================================== */
@@ -314,6 +470,24 @@ const LAB_COMPONENTS: LabComponent[] = [
       "Keyboard-first (function before form). 150ms overlay fade, 200ms panel scale — no animation blocks intent. Focus trap + aria-activedescendant for screen readers. WCAG AA. Tools that actually work.",
     code: COMMAND_PALETTE_CODE,
     installCmd: "21st add @marktantongco/command-palette",
+  },
+  {
+    id: "toast",
+    name: "Toast",
+    tagline: "4 variants · swipe-to-dismiss · auto-dismiss · aria-live · action buttons",
+    version: "v1.0.0",
+    preview: <ToastDemo />,
+    tryIts: [
+      "Click Success / Error / Warning / Info to fire a toast",
+      "Swipe right to dismiss (or click the X)",
+      "Error toasts persist until closed (aria-live=assertive)",
+      "Warning + Info include action buttons",
+    ],
+    builtWith: ["motion/react", "lucide-react", "Tailwind 4", "TypeScript"],
+    brandAlignment:
+      "200ms ease-out entry (brand motion). Semantic colors only for state, never decoration. aria-live=assertive for errors, polite for others. Swipe-to-dismiss on mobile (function before form). Empathetic copy — never smug.",
+    code: TOAST_CODE,
+    installCmd: "21st add @marktantongco/toast",
   },
 ];
 
@@ -479,7 +653,7 @@ export default function ComponentLab() {
               transition={{ duration: 0.25, ease: [0, 0, 0.2, 1] }}
             >
               <div className="grid gap-8 lg:grid-cols-2">
-                {/* preview — mobile frame for pin-list, centered for command-palette */}
+                {/* preview — mobile frame for pin-list, centered for command-palette + toast */}
                 <div className={comp.id === "pin-list" ? "" : "flex items-center justify-center"}>
                   {comp.id === "pin-list" ? (
                     <MobileFrame>{comp.preview}</MobileFrame>
