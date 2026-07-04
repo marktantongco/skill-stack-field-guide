@@ -13,6 +13,7 @@ import {
 import PinList, { type PinListItem } from "@/components/ui/pin-list";
 import CommandPalette, { type CommandItem } from "@/components/ui/command-palette";
 import ToastViewport, { useToasts } from "@/components/ui/toast";
+import { useConfigStore, type TimeRange } from "@/lib/config-store";
 import { Lock, Star, ShoppingCart as Cart, Users as UsersIcon, DollarSign as Dollar } from "lucide-react";
 
 /* ================================================================== */
@@ -158,13 +159,18 @@ function KPICard({ kpi, pinned, onTogglePin }: { kpi: KPIMetric; pinned: boolean
 /* ================================================================== */
 
 export default function DataVizLab() {
-  const [range, setRange] = React.useState<TimeRange>("30D");
+  // Read config from shared store (controlled by Settings Lab)
+  const { defaultRange, visibleKpis, refreshInterval, dashboardTitle, showTable, showBarChart } = useConfigStore();
+
+  const [range, setRange] = React.useState<TimeRange>(defaultRange);
   const [pinnedIds, setPinnedIds] = React.useState<Set<string>>(new Set(["rev"]));
   const [activeMetric, setActiveMetric] = React.useState<string>("rev");
   const [paletteOpen, setPaletteOpen] = React.useState(false);
   const { toasts, toast, dismiss } = useToasts();
 
-  const kpis = KPIS[range];
+  // Filter KPIs by store config (visibleKpis)
+  const allKpis = KPIS[range];
+  const kpis = allKpis.filter((k) => visibleKpis.has(k.id as any));
   const activeKpi = kpis.find((k) => k.id === activeMetric) ?? kpis[0];
 
   // Pin list items (derived from KPIs)
@@ -212,19 +218,21 @@ export default function DataVizLab() {
     })),
   ];
 
-  // Simulate real-time data update every 12s
+  // Simulate real-time data update (interval from store — controlled by Settings)
   React.useEffect(() => {
+    if (refreshInterval === 0) return; // 0 = off
     const interval = setInterval(() => {
       const kpi = kpis[Math.floor(Math.random() * kpis.length)];
+      if (!kpi) return;
       toast({
         title: `${kpi.label} updated`,
         description: `New value: ${kpi.format(kpi.value)}`,
         variant: "success",
         duration: 4000,
       });
-    }, 12000);
+    }, refreshInterval * 1000);
     return () => clearInterval(interval);
-  }, [range, kpis, toast]);
+  }, [range, kpis, toast, refreshInterval]);
 
   // Cmd+K
   React.useEffect(() => {
@@ -255,7 +263,7 @@ export default function DataVizLab() {
           <div className="flex-1">
             <div className="font-mono text-xs uppercase tracking-[0.2em] text-emerald-400/70">10 — data viz lab</div>
             <h2 id="data-viz" className="scroll-mt-24 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
-              The Dashboard
+              {dashboardTitle}
             </h2>
             <p className="mt-2 max-w-2xl text-sm text-zinc-400">
               A live analytics surface that <strong className="text-white">consumes</strong> the Component Lab —
@@ -350,9 +358,10 @@ export default function DataVizLab() {
           </div>
         </div>
 
-        {/* bar chart + table */}
+        {/* bar chart + table — conditional on settings */}
         <div className="grid gap-4 lg:grid-cols-2">
-          {/* bar chart */}
+          {/* bar chart — hidden if showBarChart is false */}
+          {showBarChart && (
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
             <h3 className="mb-4 text-sm font-semibold text-white">Orders by day</h3>
             <div className="h-48">
@@ -373,8 +382,10 @@ export default function DataVizLab() {
               </ResponsiveContainer>
             </div>
           </div>
+          )}
 
-          {/* data table */}
+          {/* data table — hidden if showTable is false */}
+          {showTable && (
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
             <h3 className="mb-4 text-sm font-semibold text-white">Recent invoices</h3>
             <div className="overflow-x-auto">
@@ -404,6 +415,7 @@ export default function DataVizLab() {
               </table>
             </div>
           </div>
+          )}
         </div>
 
         {/* system note */}
