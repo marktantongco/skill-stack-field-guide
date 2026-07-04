@@ -575,3 +575,54 @@ Stage Summary:
   Layer 5: Auth (NextAuth.js + credentials provider + userId-scoped config)
 - Different users get different dashboard configs. The DashboardConfig.userId field enforces isolation.
 - The portfolio proves: "I can build a SaaS" — components → dashboard → controls → backend → auth → multi-user.
+
+---
+Task ID: 17
+Agent: main (Super Z)
+Task: Switch to Neon Postgres + verify production multi-user auth.
+
+Work Log:
+- MOCK TEST (local auth flow, all passed):
+  1. Seed → 16 metrics + demo user ✅
+  2. Login page → creds pre-filled ✅
+  3. Click Sign in → redirect to home → LOGGED IN ✅
+  4. Avatar (DE) in nav ✅
+  5. Sign out → Sign in button appears ✅
+  6. Sign back in → full cycle ✅
+
+- NEON POSTGRES SWITCH:
+  - schema.prisma: datasource changed sqlite → postgresql
+  - .env / .env.local: DATABASE_URL updated to Neon connection string
+  - bun run db:push (with explicit DATABASE_URL): all tables synced to Neon
+  - Re-seeded Neon: 16 KPIs + demo user (demo@skillstack.dev / demo1234)
+  - Verified locally against Neon: login, session, config all work
+
+- VERCEL ENV VARS SET (4 total):
+  - DATABASE_URL (Neon Postgres connection string)
+  - NEXTAUTH_SECRET
+  - NEXTAUTH_URL (https://skill-stack-field-guide.vercel.app)
+  - API_KEY_21ST (already existed)
+
+- BUILD ISSUES FIXED:
+  1. useSearchParams() in /login needed Suspense boundary (Next.js 16 build requirement). Split LoginPage into LoginForm (inner, uses useSearchParams) + LoginPage (outer, wraps in <Suspense>).
+  2. Prisma client not regenerated for Postgres on Vercel. Added "postinstall": "prisma generate" to package.json + "prisma generate" to the build script.
+
+- PRODUCTION VERIFICATION (all passed):
+  1. POST /api/seed (production) → 16 metrics + demo user created on Neon ✅
+  2. /login page renders ✅
+  3. Click Sign in → redirect to home → LOGGED IN ON PRODUCTION ✅
+  4. GET /api/auth/session → { user: { email: "demo@skillstack.dev" } } ✅
+  5. GET /api/config → userId from Neon database (cmr6kbm43000il104hpe3zx49) ✅
+  6. Zero console errors ✅
+
+- SECURITY: Neon connection string pasted in chat. Rotate after session at neon.tech dashboard.
+
+Stage Summary:
+- 5-LAYER SaaS ARCHITECTURE FULLY OPERATIONAL ON PRODUCTION:
+  Layer 1: Component Lab (3 components) — Vercel
+  Layer 2: Data Viz Lab (Dashboard) — Vercel, fetches from /api/metrics → Neon
+  Layer 3: Settings Lab (Controls) — Vercel, persists to /api/config → Neon
+  Layer 4: Backend — Vercel API routes + Neon Postgres
+  Layer 5: Auth — NextAuth.js on Vercel, credentials verified against Neon
+- The portfolio proves "I can build a SaaS" — end to end, on production infrastructure.
+- Demo: https://skill-stack-field-guide.vercel.app/login (demo@skillstack.dev / demo1234)
