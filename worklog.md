@@ -315,3 +315,59 @@ Stage Summary:
 - Component #2 (Command Palette) live in The Lab.
 - Lab now has 2 components — portfolio is building real volume.
 - Wrapper is component-agnostic — component #3 slots in with ~30 lines.
+
+---
+Task ID: 12
+Agent: main (Super Z)
+Task: Mock test Command Palette on production + build component #3 (Toast).
+
+Work Log:
+- MOCK TEST (production, Command Palette):
+  1. ✅ Scrolled to The Lab
+  2. ✅ Switched to Command Palette
+  3. ✅ Demo visible ("Search commands")
+  4. ✅ Cmd+K opened palette
+  5. ✅ Typed "theme"
+  6. ✅ Fuzzy-matched to 1 result: "Toggle theme⌘D"
+  7. ✅ Zero console errors
+  Friction: none. Cmd+K fired first try. Fuzzy search correctly weighted "theme" against label + keywords.
+
+- BUILT Toast (src/components/ui/toast.tsx, 185 lines):
+  - 4 variants: success (#10B981), error (#EF4444), warning (#F59E0B), info (#2563EB)
+  - Auto-dismiss: 5s default, 0 = persistent (errors persist)
+  - Swipe-to-dismiss: drag x > 100px
+  - aria-live: assertive for errors, polite for others
+  - Action buttons (Upgrade, Refresh)
+  - useToasts hook: toast(), dismiss(), auto-cleanup on unmount
+  - ToastViewport: top-right desktop, top mobile, z-200
+  - 200ms ease-out entry (brand motion)
+  - Semantic colors only for state, never decoration
+
+- Added Toast as 3rd entry in ComponentLab:
+  - 4 trigger buttons (Success/Error/Warning/Info)
+  - Error persists until closed; others auto-dismiss after 5s
+  - Warning + Info include action buttons
+  - Same 3-tab structure (Preview/Code/Install)
+
+- FIXED: My new toast.tsx overwrote the shadcn scaffold's toast.tsx, breaking the old Toaster component (imported ToastTitle, ToastProvider, etc. that no longer existed). Removed the old Toaster from layout.tsx — the Lab uses its own toast system.
+
+- git-crypt binary vanished again (sandbox reset). Reinstalled via apt-get download + dpkg-deb -x. Committed .env.local (encrypted) + all remaining files.
+
+- VERIFIED (production, cache-busted URL):
+  - All 3 selectors present: Pin List | Command Palette | Toast
+  - Toast demo visible
+  - Click Success → "Payment received" fires
+  - Click Error → "Export failed" fires
+  - Click Warning → "Upgrade" action visible
+  - After 6s: only Error persists (auto-dismiss working)
+  - Zero console errors, lint clean
+
+- Pushed to GitHub. Vercel auto-deployed. Production HTTP 200.
+
+Stage Summary:
+- Mock test passed: Cmd+K + "theme" → "Toggle theme" on production.
+- Component #3 (Toast) live. The Lab now has 3 components covering 3 interaction paradigms:
+  1. Pin List — list pattern (reorder, pin, search)
+  2. Command Palette — overlay pattern (Cmd+K, fuzzy, keyboard nav)
+  3. Toast — ephemeral pattern (4 variants, auto-dismiss, swipe-to-dismiss)
+- Portfolio is now real volume, not a footnote.
