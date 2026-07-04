@@ -466,3 +466,60 @@ Stage Summary:
   Layer 2 (Data Viz Lab): Dashboard consuming all 3 components
   Layer 3 (Settings Lab): Controls consuming Dashboard + Toast, writes to shared Zustand store
 - Each layer proves the previous one was built right: components compose into a dashboard, dashboard is configurable from a settings page, settings persist across sessions.
+
+---
+Task ID: 15
+Agent: main (Super Z)
+Task: Full-stack capability — add Prisma + SQLite + API routes. Cross the multi-user threshold.
+
+Work Log:
+- MOCK TEST (Settings → Dashboard system, production):
+  1. ✅ Toggle Orders OFF → toast "Orders hidden" → Dashboard shows 3 KPIs
+  2. ✅ Toggle Orders ON → Dashboard shows 4 KPIs
+  3. ✅ Zero console errors
+
+- SKILLS VERIFIED (re-confirmed):
+  find-skills (2.3M), brainstorming (258K), writing-plans (170K), executing-plans (141K),
+  agent-browser (510K), grill-me (451K), systematic-debugging (171K).
+  rtk (68K stars), icm (481), grit (96). plan-orchestrate: NOT FOUND.
+
+- BACKEND BUILT:
+  - prisma/schema.prisma: added KpiMetric (kpiId, label, range, value, delta, series JSON, icon) + DashboardConfig (userId nullable for multi-user, dashboardTitle, defaultRange, refreshInterval, showTable, showBarChart, visibleKpis CSV). User model already existed.
+  - db:push: synced SQLite database. Prisma Client generated.
+  - src/app/api/metrics/route.ts: GET /api/metrics?range=7D|30D|90D|YTD → KPI data from database (16 rows seeded across 4 ranges × 4 KPIs).
+  - src/app/api/config/route.ts: GET /api/config → returns dashboard config from database. PUT /api/config → upserts config. Multi-user ready via userId query param.
+  - src/app/api/seed/route.ts: POST /api/seed → idempotent upsert of 16 KPI metrics + default config.
+  - Fixed Prisma issue: findUnique doesn't accept null for nullable userId — used findFirst for demo user (null userId).
+
+- FULL-STACK WIRING:
+  - src/lib/config-store.ts: Zustand store now hydrates from /api/config on mount (hydrateFromBackend). Every state change triggers debounced (800ms) PUT to /api/config. localStorage remains as fallback cache for offline + instant load.
+  - DataVizLab: fetches KPIs from /api/metrics?range=X via useEffect (replaces mock KPIS object). Loading state + empty state handled. Icon names from DB mapped to lucide components via ICON_MAP.
+  - Fixed: activeKpi undefined during initial load — added guard before accessing .label/.format().
+
+- VERIFIED (local):
+  - POST /api/seed → 16 metrics seeded ✅
+  - GET /api/metrics?range=30D → 4 KPIs from database (Revenue=78420, Users=5284, Orders=1442, Conversion=4.8) ✅
+  - GET /api/config → config from database ✅
+  - PUT /api/config → persists to database ✅
+  - Toggle Orders OFF in Settings → debounced PUT → GET /api/config shows visibleKpis: ['rev','users','conv'] ✅
+  - Full round-trip: Settings → store → PUT → SQLite → GET → hydrate ✅
+  - 0 console errors, lint clean
+
+- PRODUCTION DEPLOY:
+  - Vercel serverless filesystem is read-only → SQLite database doesn't persist on Vercel.
+  - API routes 500 on Vercel (Prisma can't open the .db file).
+  - Frontend gracefully degrades: hydrateFromBackend catches the error → falls back to localStorage. The UI is fully functional on Vercel (same as before this turn, just without backend persistence).
+  - The full-stack proof is: Prisma schema + API routes + local database + the round-trip works locally.
+  - For true production multi-user: switch datasource to PostgreSQL (Vercel Postgres / Neon / Supabase). The schema + API routes + store are already multi-user ready (userId field).
+
+- Production verified: all sections present (Lab → Dashboard → Controls), KPIs render (from localStorage fallback), 0 console errors.
+
+Stage Summary:
+- Full-stack capability achieved: Prisma ORM + SQLite database + 3 API routes + Zustand store that hydrates from + persists to the backend.
+- The portfolio now tells a 4-layer story:
+  Layer 1: Component Lab (3 components)
+  Layer 2: Data Viz Lab (Dashboard consuming components, fetching from API)
+  Layer 3: Settings Lab (Controls consuming Dashboard, persisting to API)
+  Layer 4: Backend (Prisma + SQLite + API routes — the database layer)
+- Multi-user ready: DashboardConfig has userId field. Add auth + the system supports per-user configs.
+- The threshold "multi-user" requires one more step: switch SQLite → Postgres + add authentication. The architecture is ready; the infrastructure is the next call.
