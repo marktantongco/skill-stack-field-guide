@@ -18,6 +18,10 @@ import Showcase from "@/components/Showcase";
 import ComponentLab from "@/components/ComponentLab";
 import DataVizLab from "@/components/DataVizLab";
 import SettingsLab from "@/components/SettingsLab";
+import ThreeHero from "@/components/ThreeHero";
+import SystemGraph from "@/components/SystemGraph";
+import ResearchMatrix from "@/components/ResearchMatrix";
+import CTASection from "@/components/CTASection";
 import { useConfigStore } from "@/lib/config-store";
 import { UserMenu } from "@/components/UserMenu";
 
@@ -208,17 +212,10 @@ function Hero() {
 function StickyNav() {
   const [open, setOpen] = useState(false);
   const links = [
-    { href: "#lab", label: "Lab" },
-    { href: "#data-viz", label: "Dashboard" },
-    { href: "#settings", label: "Controls" },
-    { href: "#live", label: "Live 21st" },
-    { href: "#foundations", label: "Foundations" },
-    { href: "#combinations", label: "30 Combos" },
-    { href: "#matrix", label: "Synergy Matrix" },
-    { href: "#deepdive", label: "Deep-Dive" },
-    { href: "#registry", label: "Registry" },
-    { href: "#cores", label: "Top-5 Cores" },
-    { href: "#install", label: "Install" },
+    { href: "#act-1", label: "Hook" },
+    { href: "#act-2", label: "Components" },
+    { href: "#act-3", label: "System" },
+    { href: "#act-4", label: "Research" },
   ];
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-zinc-950/70 backdrop-blur-xl">
@@ -951,21 +948,57 @@ export default function Home() {
       <motion.div style={{ scaleX }} className="fixed left-0 top-0 z-[60] h-0.5 w-full origin-left bg-gradient-to-r from-emerald-400 via-teal-400 to-amber-400" />
       <StickyNav />
       <main className="flex-1">
-        <Hero />
-        <Showcase />
-        <ComponentLab />
-        <DataVizLab />
-        <SettingsLab />
-        <LiveComponents />
-        <Foundations />
-        <Combinations />
-        <SynergyMatrix />
-        <DeepDive />
-        <Registry />
-        <Cores />
-        <Install />
+        {/* ACT 1: THE HOOK — Three.js particle field hero */}
+        <section id="act-1" className="relative min-h-screen overflow-hidden">
+          <ThreeHero />
+          <Hero />
+        </section>
+
+        {/* ACT 2: THE COMPONENTS — Showcase + Lab */}
+        <section id="act-2">
+          <Showcase />
+          <ComponentLab />
+        </section>
+
+        {/* ACT 3: THE SYSTEM — Dashboard + Controls + connection graph */}
+        <section id="act-3">
+          <div className="border-y border-white/5 bg-zinc-950/50 py-16">
+            <div className="mx-auto max-w-6xl px-5">
+              <div className="mb-8 text-center">
+                <p className="mb-3 font-mono text-xs uppercase tracking-[0.3em] text-emerald-400/70">Act 3 — the system</p>
+                <h2 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+                  Three layers, one signal
+                </h2>
+                <p className="mx-auto mt-3 max-w-xl text-sm text-zinc-400">
+                  Components feed the dashboard. The dashboard feeds the controls.
+                  The controls persist to the database. Every arrow is a real data flow.
+                </p>
+              </div>
+              <SystemGraph />
+            </div>
+          </div>
+          <DataVizLab />
+          <SettingsLab />
+        </section>
+
+        {/* ACT 4: THE RESEARCH — compressed into one tabbed matrix */}
+        <section id="act-4" className="mx-auto max-w-6xl px-5 py-20">
+          <div className="mb-8">
+            <p className="mb-3 font-mono text-xs uppercase tracking-[0.3em] text-emerald-400/70">Act 4 — the research</p>
+            <h2 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+              The Field Guide
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm text-zinc-400">
+              30 skill-stack combinations, 20 synergy-matrix rows, 23 verified skills,
+              12 install commands. One tabbed interface. Search it, filter it, copy it.
+            </p>
+          </div>
+          <ResearchMatrix />
+        </section>
+
+        {/* ACT 5: THE CTA */}
+        <CTASection />
       </main>
-      <Footer />
     </div>
   );
 }
